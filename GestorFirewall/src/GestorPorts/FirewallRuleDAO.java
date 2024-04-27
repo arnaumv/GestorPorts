@@ -45,13 +45,6 @@ public class FirewallRuleDAO {
                 throw new SQLException("Creating rule failed, no rows affected.");
             }
 
-            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    rule.setId(generatedKeys.getInt(1));
-                } else {
-                    throw new SQLException("Creating rule failed, no ID obtained.");
-                }
-            }
         }
     }
 
@@ -73,7 +66,6 @@ public class FirewallRuleDAO {
                         rs.getString("accion"),
                         rs.getString("interfaz_red"),
                         rs.getString("direccion"));
-                rule.setId(rs.getInt("id")); // Establece el id aquí
                 rules.add(rule);
             }
         } catch (SQLException e) {
@@ -102,7 +94,6 @@ public class FirewallRuleDAO {
                         rs.getString("accion"),
                         rs.getString("interfaz_red"),
                         rs.getString("direccion"));
-                rule.setId(rs.getInt("id")); // Establece el id aquí
             }
         } catch (SQLException e) {
             e.printStackTrace();
