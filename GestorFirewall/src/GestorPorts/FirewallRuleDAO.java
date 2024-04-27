@@ -22,7 +22,7 @@ public class FirewallRuleDAO {
             throw new SQLException("Una regla con el mismo nombre ya existe.");
         }
 
-        String sql = "INSERT INTO reglas_firewall (nombre, puerto, protocolo, aplicacion, usuario, grupo, direccion_ip, accion, interfaz_red, direccion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO reglas_firewall (nombre, puerto, protocolo, aplicacion, usuario, grupo, direccion_ip, accion, interfaz_red, direccion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, rule.getName());
@@ -35,6 +35,7 @@ public class FirewallRuleDAO {
             statement.setString(8, rule.getAction());
             statement.setString(9, rule.getNetworkInterface());
             statement.setString(10, rule.getDirection());
+            statement.setTimestamp(11, new Timestamp(System.currentTimeMillis()));
 
             statement.executeUpdate();
         }
