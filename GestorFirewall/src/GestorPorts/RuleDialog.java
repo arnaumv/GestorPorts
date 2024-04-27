@@ -1,9 +1,12 @@
 package GestorPorts;
 
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
+import java.util.concurrent.ExecutionException;
 
 public class RuleDialog extends JDialog {
     private JTextField nomField;
@@ -18,6 +21,7 @@ public class RuleDialog extends JDialog {
     private JComboBox<String> sentitField;
     private JButton saveButton;
     private JButton cancelButton;
+    private JLabel loadingIndicator;
 
     public RuleDialog(Frame owner) {
         super(owner, "Nova Regla", true);
@@ -35,31 +39,120 @@ public class RuleDialog extends JDialog {
         saveButton = new JButton("Guardar");
         cancelButton = new JButton("Cancelar");
 
+        // Initialize the loading indicator
+        loadingIndicator = new JLabel("Cargando...");
+        loadingIndicator.setVisible(false);
+
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Create a new FirewallRule from the input fields
-                FirewallRule rule = new FirewallRule(
-                        nomField.getText(),
-                        Integer.parseInt(portField.getText()),
-                        (String) protocolField.getSelectedItem(),
-                        appField.getText(),
-                        usuariField.getText(),
-                        grupField.getText(),
-                        ipField.getText(),
-                        (String) accioField.getSelectedItem(),
-                        interficieField.getText(),
-                        (String) sentitField.getSelectedItem());
+                // Disable interactive elements
+                setInteractiveElementsEnabled(false);
 
-                // Validate the rule and check for duplicates
-                // ...
+                // Show loading indicator
+                showLoadingIndicator();
 
-                // Add the rule to the firewall
-                FirewallManager manager = new FirewallManager();
-                manager.addRule(rule);
+                // Create a SwingWorker to perform the long-running task
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    private boolean isError = false; // Add this line
 
-                // Close the dialog
-                RuleDialog.this.dispose();
+                    @Override
+                    protected Void doInBackground() throws Exception {
+                        // Simulate loading time
+                        Thread.sleep(1500);
+
+                        // Create a new FirewallRule from the input fields
+                        FirewallRule rule = new FirewallRule(
+                                nomField.getText(),
+                                Integer.parseInt(portField.getText()),
+                                (String) protocolField.getSelectedItem(),
+                                appField.getText(),
+                                usuariField.getText(),
+                                grupField.getText(),
+                                ipField.getText(),
+                                (String) accioField.getSelectedItem(),
+                                interficieField.getText(),
+                                (String) sentitField.getSelectedItem());
+
+                        // Validate the rule and check for duplicates
+                        if (!isRuleValid(rule)) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(RuleDialog.this,
+                                            "Error: Regla inválida.", "Error",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            });
+                            isError = true; // Add this line
+                            return null;
+                        }
+
+                        if (isDuplicateRule(rule)) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(RuleDialog.this,
+                                            "Error: Regla duplicada.", "Error",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            });
+                            isError = true; // Add this line
+                            return null;
+                        }
+
+                        // Add the rule to the firewall
+                        try {
+                            FirewallManager manager = new FirewallManager();
+                            manager.addRule(rule);
+                        } catch (Exception ex) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(RuleDialog.this,
+                                            "Error: " + ex.getMessage(), "Error",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            });
+                            isError = true; // Add this line
+                            return null;
+                        }
+
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+                        // Hide loading indicator
+                        hideLoadingIndicator();
+
+                        // Enable interactive elements
+                        setInteractiveElementsEnabled(true);
+
+                        try {
+                            get(); // This line can throw an ExecutionException if doInBackground() threw an
+                                   // exception
+                        } catch (InterruptedException e) {
+                            // This happens if the SwingWorker's thread was interrupted
+                            e.printStackTrace();
+                        } catch (ExecutionException e) {
+                            // This happens if we throw an exception from doInBackground().
+                            Throwable cause = e.getCause();
+                            JOptionPane.showMessageDialog(RuleDialog.this,
+                                    "Error: " + cause.getMessage(), "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+
+                        // If there was no error, close the dialog
+                        if (!isError) { // Modify this line
+                            RuleDialog.this.dispose();
+                        }
+                    }
+                };
+
+                // Start the SwingWorker
+                worker.execute();
             }
         });
 
@@ -71,7 +164,7 @@ public class RuleDialog extends JDialog {
             }
         });
 
-        setLayout(new GridLayout(11, 2));
+        setLayout(new GridLayout(13, 2));
         add(new JLabel("Nom: "));
         add(nomField);
         add(new JLabel("Port: "));
@@ -92,9 +185,89 @@ public class RuleDialog extends JDialog {
         add(interficieField);
         add(new JLabel("Sentit: "));
         add(sentitField);
-        add(saveButton);
-        add(cancelButton);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(saveButton);
+        buttonPanel.add(cancelButton);
+        add(buttonPanel);
 
         pack();
+    }
+
+    private void setInteractiveElementsEnabled(boolean enabled) {
+        nomField.setEnabled(enabled);
+        portField.setEnabled(enabled);
+        protocolField.setEnabled(enabled);
+        appField.setEnabled(enabled);
+        usuariField.setEnabled(enabled);
+        grupField.setEnabled(enabled);
+        ipField.setEnabled(enabled);
+        accioField.setEnabled(enabled);
+        interficieField.setEnabled(enabled);
+        sentitField.setEnabled(enabled);
+        saveButton.setEnabled(enabled);
+        cancelButton.setEnabled(enabled);
+    }
+
+    private void showLoadingIndicator() {
+        loadingIndicator.setVisible(true);
+    }
+
+    private void hideLoadingIndicator() {
+        loadingIndicator.setVisible(false);
+    }
+
+    private boolean isRuleValid(FirewallRule rule) {
+        // Check if the rule name is empty
+        if (rule.getName() == null || rule.getName().trim().isEmpty()) {
+            return false;
+        }
+
+        // Check if the port number is valid
+        if (rule.getPort() < 1 || rule.getPort() > 65535) {
+            return false;
+        }
+
+        // Check if the IP address is valid
+        if (!isValidIP(rule.getIpAddress())) {
+
+            return false;
+        }
+
+        // Add more validation logic as needed...
+
+        return true;
+    }
+
+    private boolean isValidIP(String ip) {
+        // Check if the IP address is a range
+        if (ip.contains("-")) {
+            String[] parts = ip.split("-");
+            if (parts.length != 2) {
+                return false;
+            }
+
+            return isValidSingleIP(parts[0].trim()) && isValidSingleIP(parts[1].trim());
+        }
+
+        // If it's not a range, check if it's a valid single IP address
+        return isValidSingleIP(ip);
+    }
+
+    private boolean isValidSingleIP(String ip) {
+        // Use a regular expression (regex) to check if the IP address is valid
+        String regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+        return ip.matches(regex);
+    }
+
+    private boolean isDuplicateRule(FirewallRule rule) {
+        FirewallRuleDAO dao;
+        try {
+            dao = FirewallRuleDAO.getInstance();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false; // O maneja esta excepción de la manera que prefieras
+        }
+        return dao.ruleExists(rule);
     }
 }
