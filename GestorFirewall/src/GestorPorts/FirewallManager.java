@@ -1,6 +1,8 @@
 package GestorPorts;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 
 public class FirewallManager {
@@ -26,21 +28,51 @@ public class FirewallManager {
 
         // Build the firewall command
         String command = String.format(
-                "netsh advfirewall firewall add rule name=\"%s\" dir=in action=%s protocol=%s localport=%d",
-                rule.getName(), netshAction, rule.getProtocol().toLowerCase(), rule.getPort());
+                "netsh advfirewall firewall add rule name=\"%s\" dir=in action=%s protocol=%s localport=%d remoteip=%s",
+                rule.getName(), netshAction, rule.getProtocol().toLowerCase(), rule.getPort(), rule.getIpAddress());
 
-        // Execute the firewall command
+        Process process = null;
+        BufferedReader reader = null;
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", command);
-            Process process = processBuilder.start();
+            process = processBuilder.start();
             int exitCode = process.waitFor();
             if (exitCode != 0) {
-                throw new IOException("Error executing shell command: " + command);
+                reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                String line;
+                StringBuilder errorMessage = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    errorMessage.append(line);
+                }
+                throw new IOException(
+                        "Error executing shell command: " + command + ". Error: " + errorMessage.toString());
             }
         } catch (IOException | InterruptedException e) {
-            // Handle the exception appropriately for your application
-            // For example, you could throw a new exception with a custom message
-            throw new RuntimeException("Error adding firewall rule: " + rule.getName());
+            e.printStackTrace();
+            if (process != null) {
+                reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                String line;
+                StringBuilder errorMessage = new StringBuilder();
+                try {
+                    while ((line = reader.readLine()) != null) {
+                        errorMessage.append(line);
+                    }
+                    System.out.println("Error details: " + errorMessage.toString());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new RuntimeException("Error adding firewall rule: " + rule.getName(), e);
+        } finally {
+            // Close the reader in the finally block to ensure it gets closed whether an
+            // exception occurs or not
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         // Only add the rule to the database if the system firewall rule was
@@ -53,7 +85,6 @@ public class FirewallManager {
             throw new RuntimeException("Error adding rule to database: " + rule.getName(), e);
         }
     }
-
     // Translate the action to an iptables action
     // String iptablesAction = rule.getAction().equals("Permetre") ? "ACCEPT" :
     // "DROP";
@@ -72,5 +103,5 @@ public class FirewallManager {
     // e.printStackTrace();
     // }
 
-    // other methods to delete, update and retrieve rules
+    // other methods to delete, update and retrieve rules aaa
 }
