@@ -27,14 +27,29 @@ public class FirewallManager {
         String netshAction = rule.getAction().equals("Permetre") ? "allow" : "block";
 
         // Build the firewall command
-        String command = String.format(
+        StringBuilder command = new StringBuilder(String.format(
                 "netsh advfirewall firewall add rule name=\"%s\" dir=in action=%s protocol=%s localport=%d remoteip=%s",
-                rule.getName(), netshAction, rule.getProtocol().toLowerCase(), rule.getPort(), rule.getIpAddress());
+                rule.getName(), netshAction, rule.getProtocol().toLowerCase(), rule.getPort(), rule.getIpAddress()));
+
+        // If user, group, application or interface are specified, add them to the
+        // command
+        if (rule.getApplication() != null) {
+            command.append(" program=").append(rule.getApplication());
+        }
+        if (rule.getUser() != null) {
+            command.append(" user=").append(rule.getUser());
+        }
+        if (rule.getGroup() != null) {
+            command.append(" group=").append(rule.getGroup());
+        }
+        if (rule.getNetworkInterface() != null) {
+            command.append(" interface=").append(rule.getNetworkInterface());
+        }
 
         Process process = null;
         BufferedReader reader = null;
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", command);
+            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", command.toString());
             process = processBuilder.start();
             int exitCode = process.waitFor();
             if (exitCode != 0) {
@@ -85,23 +100,42 @@ public class FirewallManager {
             throw new RuntimeException("Error adding rule to database: " + rule.getName(), e);
         }
     }
-    // Translate the action to an iptables action
+
+    // public void addRule(FirewallRule rule) throws IllegalArgumentException {
+    // // Check if a rule with the same name already exists
+    // if (dao.getRule(rule.getName()) != null) {
+    // throw new IllegalArgumentException("Una regla con el mismo nombre ya
+    // existe.");
+    // }
+
+    // // Translate the action to an iptables action
     // String iptablesAction = rule.getAction().equals("Permetre") ? "ACCEPT" :
     // "DROP";
 
-    // Build the firewall command
-    // String command = String.format("iptables -A INPUT -p %s --dport %d -j %s",
-    // rule.getProtocol(), rule.getPort(), iptablesAction);
+    // // Build the firewall command
+    // StringBuilder command = new StringBuilder(String.format(
+    // "iptables -A INPUT -p %s --dport %d -j %s",
+    // rule.getProtocol(), rule.getPort(), iptablesAction));
 
-    // Execute the firewall command
+    // // If user, group or interface are specified, add them to the command
+    // if (rule.getUser() != null) {
+    // command.append(" -m owner --uid-owner ").append(rule.getUser());
+    // }
+    // if (rule.getGroup() != null) {
+    // command.append(" -m owner --gid-owner ").append(rule.getGroup());
+    // }
+    // if (rule.getNetworkInterface() != null) {
+    // command.append(" -i ").append(rule.getNetworkInterface());
+    // }
+
+    // // Execute the firewall command
     // try {
     // ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c",
-    // command);
+    // command.toString());
     // Process process = processBuilder.start();
     // process.waitFor();
     // } catch (IOException | InterruptedException e) {
     // e.printStackTrace();
     // }
 
-    // other methods to delete, update and retrieve rules aaa
 }
