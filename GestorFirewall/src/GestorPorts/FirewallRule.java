@@ -1,6 +1,7 @@
 package GestorPorts;
 
 public class FirewallRule {
+    private int id;
     private String name;
     private int port;
     private String protocol;
@@ -11,22 +12,30 @@ public class FirewallRule {
     private String action;
     private String networkInterface;
     private String direction;
-
+ 
     // Constructor
-    public FirewallRule(String name, int port, String protocol, String application, String user, String group,
-            String ipAddress, String action, String networkInterface, String direction) {
-        this.name = name;
-        this.port = port;
-        this.protocol = protocol;
-        this.application = application;
-        this.user = user;
-        this.group = group;
-        this.ipAddress = ipAddress;
-        this.action = action;
-        this.networkInterface = networkInterface;
-        this.direction = direction;
+    public FirewallRule(String nombre, int puerto, String protocolo, String aplicacion, String usuario,
+            String grupo, String direccion_ip, String accion, String interfaz_red, String direccion) {
+        this.name = nombre;
+        this.port = puerto;
+        this.protocol = protocolo;
+        this.application = aplicacion;
+        this.user = usuario;
+        this.group = grupo;
+        this.ipAddress = direccion_ip;
+        this.action = accion;
+        this.networkInterface = interfaz_red;
+        this.direction = direccion;
     }
+
     // Getters and setters for each field
+    public int getId() {
+        return this.id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;

@@ -26,7 +26,7 @@ public class FirewallRuleDAO {
 
         String sql = "INSERT INTO reglas_firewall (nombre, puerto, protocolo, aplicacion, usuario, grupo, direccion_ip, accion, interfaz_red, direccion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, rule.getName());
             statement.setInt(2, rule.getPort());
             statement.setString(3, rule.getProtocol());
@@ -39,7 +39,19 @@ public class FirewallRuleDAO {
             statement.setString(10, rule.getDirection());
             statement.setTimestamp(11, new Timestamp(System.currentTimeMillis()));
 
-            statement.executeUpdate();
+            int affectedRows = statement.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new SQLException("Creating rule failed, no rows affected.");
+            }
+
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    rule.setId(generatedKeys.getInt(1));
+                } else {
+                    throw new SQLException("Creating rule failed, no ID obtained.");
+                }
+            }
         }
     }
 
@@ -61,6 +73,7 @@ public class FirewallRuleDAO {
                         rs.getString("accion"),
                         rs.getString("interfaz_red"),
                         rs.getString("direccion"));
+                rule.setId(rs.getInt("id")); // Establece el id aquí
                 rules.add(rule);
             }
         } catch (SQLException e) {
@@ -89,6 +102,7 @@ public class FirewallRuleDAO {
                         rs.getString("accion"),
                         rs.getString("interfaz_red"),
                         rs.getString("direccion"));
+                rule.setId(rs.getInt("id")); // Establece el id aquí
             }
         } catch (SQLException e) {
             e.printStackTrace();

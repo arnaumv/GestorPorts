@@ -20,8 +20,8 @@ public class FirewallGUI {
 
     public FirewallGUI() {
         this.manager = new FirewallManager();
-        this.tableModel = new DefaultTableModel(new Object[] { "Nom", "Port", "Protocol", "App", "Usuari", "Grup", "IP",
-                "Accio", "Interficie", "Sentit" }, 0);
+        this.tableModel = new DefaultTableModel(new Object[] { "ID", "Nom", "Port", "Protocol", "App", "Usuari", "Grup",
+                "IP", "Accio", "Interficie", "Sentit" }, 0);
         this.table = new JTable(tableModel);
         this.modifyButton = new JButton("Modificar");
         this.deleteButton = new JButton("Esborrar");
@@ -82,6 +82,7 @@ public class FirewallGUI {
 
     private void addRuleToTable(FirewallRule rule) {
         tableModel.addRow(new Object[] {
+                rule.getId(), // Añade esto
                 rule.getName(),
                 rule.getPort(),
                 rule.getProtocol(),
