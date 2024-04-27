@@ -43,6 +43,9 @@ public class FirewallGUI {
             public void actionPerformed(ActionEvent e) {
                 RuleDialog dialog = new RuleDialog(frame);
                 dialog.setVisible(true);
+                if (dialog.isRuleSaved()) {
+                    addRuleToTable(dialog.getRule());
+                }
             }
         });
 
@@ -67,6 +70,21 @@ public class FirewallGUI {
                     // Add entry to history
                 }
             }
+        });
+    }
+
+    private void addRuleToTable(FirewallRule rule) {
+        tableModel.addRow(new Object[] {
+                rule.getName(),
+                rule.getPort(),
+                rule.getProtocol(),
+                rule.getApplication(),
+                rule.getUser(),
+                rule.getGroup(),
+                rule.getIpAddress(),
+                rule.getAction(),
+                rule.getNetworkInterface(),
+                rule.getDirection()
         });
     }
 

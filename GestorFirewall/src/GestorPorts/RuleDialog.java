@@ -1,6 +1,5 @@
 package GestorPorts;
 
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -9,6 +8,8 @@ import java.sql.SQLException;
 import java.util.concurrent.ExecutionException;
 
 public class RuleDialog extends JDialog {
+    private boolean ruleSaved = false;
+    private FirewallRule rule;
     private JTextField nomField;
     private JTextField portField;
     private JComboBox<String> protocolField;
@@ -62,7 +63,7 @@ public class RuleDialog extends JDialog {
                         Thread.sleep(1500);
 
                         // Create a new FirewallRule from the input fields
-                        FirewallRule rule = new FirewallRule(
+                        rule = new FirewallRule(
                                 nomField.getText(),
                                 Integer.parseInt(portField.getText()),
                                 (String) protocolField.getSelectedItem(),
@@ -105,6 +106,7 @@ public class RuleDialog extends JDialog {
                         try {
                             FirewallManager manager = new FirewallManager();
                             manager.addRule(rule);
+                            ruleSaved = true;
                         } catch (Exception ex) {
                             SwingUtilities.invokeLater(new Runnable() {
                                 @Override
@@ -192,6 +194,14 @@ public class RuleDialog extends JDialog {
         add(buttonPanel);
 
         pack();
+    }
+
+    public boolean isRuleSaved() {
+        return ruleSaved;
+    }
+
+    public FirewallRule getRule() {
+        return rule;
     }
 
     private void setInteractiveElementsEnabled(boolean enabled) {
