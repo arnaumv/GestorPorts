@@ -10,6 +10,20 @@ public class FirewallRule {
     private String networkInterface;
     private String direction;
 
+    // Constructor
+    public FirewallRule(String name, int port, String protocol, String application, String user, String group,
+            String ipAddress, String action, String networkInterface, String direction) {
+        this.name = name;
+        this.port = port;
+        this.protocol = protocol;
+        this.application = application;
+        this.user = user;
+        this.group = group;
+        this.ipAddress = ipAddress;
+        this.action = action;
+        this.networkInterface = networkInterface;
+        this.direction = direction;
+    }
     // Getters and setters for each field
 
     public String getName() {
