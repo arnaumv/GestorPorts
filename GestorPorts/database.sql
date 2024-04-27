@@ -1,17 +1,17 @@
-CREATE DATABASE IF NOT EXISTS gestorports;
+CREATE DATABASE IF NOT EXISTS gestorfirewall;
 
-USE gestorports;
+USE gestorfirewall;
 
-CREATE TABLE IF NOT EXISTS firewall_rules (
+CREATE TABLE IF NOT EXISTS reglas_firewall (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    port INT NOT NULL,
-    protocol VARCHAR(255) NOT NULL,
-    application VARCHAR(255),
-    user VARCHAR(255),
-    `group` VARCHAR(255),
-    ip_address VARCHAR(255),
-    action VARCHAR(255) NOT NULL,
-    network_interface VARCHAR(255),
-    direction VARCHAR(255) NOT NULL
+    nombre VARCHAR(255) NOT NULL,
+    puerto INT NOT NULL,
+    protocolo VARCHAR(255) NOT NULL,
+    aplicacion VARCHAR(255),
+    usuario VARCHAR(255),
+    grupo VARCHAR(255),
+    direccion_ip VARCHAR(255),
+    accion VARCHAR(255) NOT NULL,
+    interfaz_red VARCHAR(255),
+    direccion VARCHAR(255) NOT NULL
 );
