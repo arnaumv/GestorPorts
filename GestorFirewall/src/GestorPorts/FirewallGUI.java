@@ -5,6 +5,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 public class FirewallGUI {
     private FirewallManager manager;
@@ -71,6 +72,12 @@ public class FirewallGUI {
                 }
             }
         });
+
+        // Load rules from database
+        List<FirewallRule> rules = manager.getAllRules();
+        for (FirewallRule rule : rules) {
+            addRuleToTable(rule);
+        }
     }
 
     private void addRuleToTable(FirewallRule rule) {

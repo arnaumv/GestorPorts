@@ -1,6 +1,8 @@
 package GestorPorts;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FirewallRuleDAO {
     private static FirewallRuleDAO instance;
@@ -39,6 +41,33 @@ public class FirewallRuleDAO {
 
             statement.executeUpdate();
         }
+    }
+
+    public List<FirewallRule> getAllRules() {
+        List<FirewallRule> rules = new ArrayList<>();
+        String sql = "SELECT * FROM reglas_firewall";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                FirewallRule rule = new FirewallRule(
+                        rs.getString("nombre"),
+                        rs.getInt("puerto"),
+                        rs.getString("protocolo"),
+                        rs.getString("aplicacion"),
+                        rs.getString("usuario"),
+                        rs.getString("grupo"),
+                        rs.getString("direccion_ip"),
+                        rs.getString("accion"),
+                        rs.getString("interfaz_red"),
+                        rs.getString("direccion"));
+                rules.add(rule);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return rules;
     }
 
     public FirewallRule getRule(String name) {

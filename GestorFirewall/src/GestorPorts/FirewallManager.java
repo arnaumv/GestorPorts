@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
+import java.util.List;
 
 public class FirewallManager {
     private FirewallRuleDAO dao;
@@ -101,6 +102,9 @@ public class FirewallManager {
         }
     }
 
+    public List<FirewallRule> getAllRules() {
+        return dao.getAllRules();
+    }
     // public void addRule(FirewallRule rule) throws IllegalArgumentException {
     // // Check if a rule with the same name already exists
     // if (dao.getRule(rule.getName()) != null) {
