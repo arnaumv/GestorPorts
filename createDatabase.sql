@@ -13,5 +13,7 @@ CREATE TABLE IF NOT EXISTS reglas_firewall (
     direccion_ip VARCHAR(255),
     accion VARCHAR(255) NOT NULL,
     interfaz_red VARCHAR(255),
-    direccion VARCHAR(255) NOT NULL
+    direccion VARCHAR(255) NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_borrada TIMESTAMP
 );

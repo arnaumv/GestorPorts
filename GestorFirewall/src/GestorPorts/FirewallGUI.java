@@ -5,6 +5,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class FirewallGUI {
@@ -51,13 +53,70 @@ public class FirewallGUI {
         });
 
         modifyButton.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow != -1) {
-                    RuleDialog dialog = new RuleDialog(frame);
-                    // Populate dialog with current rule data
-                    dialog.setVisible(true);
+                    List<Object> selectedRule = new ArrayList<>();
+                    for (int i = 0; i < 10; i++) {
+                        selectedRule.add(tableModel.getValueAt(selectedRow, i));
+                    }
+
+                    // Store the original name of the rule
+                    String originalName = (String) selectedRule.get(0);
+                    System.out.println("Original rule name: " + originalName);
+
+                    RuleModifier ruleModifier = new RuleModifier(selectedRule);
+                    JPanel modifyPanel = ruleModifier.getModifyPanel();
+
+                    // Declare the JFrame here
+                    JFrame modifyFrame = new JFrame("Modify Rule");
+
+                    JButton saveButton = new JButton("Save");
+                    saveButton.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            // Create a new FirewallRule with the modified values
+                            FirewallRule modifiedRule = new FirewallRule(
+                                    ruleModifier.getNomFieldText(),
+                                    Integer.parseInt(ruleModifier.getPortFieldText()),
+                                    ruleModifier.getProtocolFieldText(),
+                                    ruleModifier.getAppFieldText(),
+                                    ruleModifier.getUsuariFieldText(),
+                                    ruleModifier.getGrupFieldText(),
+                                    ruleModifier.getIpFieldText(),
+                                    ruleModifier.getAccioFieldText(),
+                                    ruleModifier.getInterficieFieldText(),
+                                    ruleModifier.getSentitFieldText());
+
+                            System.out.println("Modified rule: " + modifiedRule.toString());
+
+                            // Update the rule in the firewall manager
+                            try {
+                                manager.updateRule(originalName, modifiedRule);
+                                System.out.println("Rule updated successfully");
+                                // Close the frame after successful update
+                                modifyFrame.dispose();
+                            } catch (Exception ex) {
+                                // Handle the exception appropriately for your application
+                                System.out.println("Error updating rule: " + ex.getMessage());
+                            }
+
+                            // Update the table model
+                            List<Object> modifiedRuleList = Arrays.asList(modifiedRule.getName(),
+                                    modifiedRule.getPort(),
+                                    modifiedRule.getProtocol(), modifiedRule.getApplication(), modifiedRule.getUser(),
+                                    modifiedRule.getGroup(), modifiedRule.getIpAddress(), modifiedRule.getAction(),
+                                    modifiedRule.getNetworkInterface(), modifiedRule.getDirection());
+
+                            for (int i = 0; i < 10; i++) {
+                                tableModel.setValueAt(modifiedRuleList.get(i), selectedRow, i);
+                            }
+                        }
+                    });
+                    modifyPanel.add(saveButton);
+
+                    modifyFrame.setContentPane(modifyPanel);
+                    modifyFrame.pack();
+                    modifyFrame.setVisible(true);
                 }
             }
         });

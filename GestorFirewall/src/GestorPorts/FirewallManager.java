@@ -108,6 +108,72 @@ public class FirewallManager {
         }
     }
 
+    public void updateRule(String originalName, FirewallRule rule) throws IllegalArgumentException {
+        // Check if a rule with the original name exists
+        if (dao.getRule(originalName) == null) {
+            throw new IllegalArgumentException("No existe una regla con este nombre.");
+        }
+
+        // Translate the action to a netsh action
+        String netshAction = rule.getAction().equals("Permetre") ? "allow" : "block";
+
+        // Build the firewall command to update the rule
+        StringBuilder command = new StringBuilder(String.format(
+                "netsh advfirewall firewall set rule name=\"%s\" new dir=%s action=%s protocol=%s localport=%d remoteip=%s",
+                originalName, rule.getDirection().toLowerCase(), netshAction, rule.getProtocol().toLowerCase(),
+                rule.getPort(), rule.getIpAddress()));
+        System.out.println("Executing command: " + command.toString());
+
+        // If user, group, application or interface are specified, add them to the
+        // command
+        if (rule.getApplication() != null) {
+            command.append(" program=").append(rule.getApplication());
+        }
+        if (rule.getUser() != null) {
+            command.append(" user=").append(rule.getUser());
+        }
+        if (rule.getGroup() != null) {
+            command.append(" group=").append(rule.getGroup());
+        }
+        if (rule.getNetworkInterface() != null) {
+            command.append(" interface=").append(rule.getNetworkInterface());
+        }
+
+        // Execute the command to update the rule
+        Process process = null;
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", command.toString());
+            process = processBuilder.start();
+            process.waitFor(); // Wait for the command to complete
+        } catch (IOException | InterruptedException e) {
+            System.out.println(e.getMessage());
+            throw new RuntimeException("Error executing command: " + command, e);
+        }
+
+        // Build the firewall command to rename the rule
+        command = new StringBuilder(String.format(
+                "netsh advfirewall firewall set rule name=\"%s\" new name=\"%s\"",
+                originalName, rule.getName()));
+
+        // Execute the command to rename the rule
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", command.toString());
+            process = processBuilder.start();
+            process.waitFor(); // Wait for the command to complete
+        } catch (IOException | InterruptedException e) {
+            System.out.println(e.getMessage());
+            throw new RuntimeException("Error executing command: " + command, e);
+        }
+
+        // Add code to update the rule in the database
+        try {
+            dao.updateRule(originalName, rule);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            throw new RuntimeException("Error updating rule in database: " + rule.getName(), e);
+        }
+    }
+
     public List<FirewallRule> getAllRules() {
         return dao.getAllRules();
     }

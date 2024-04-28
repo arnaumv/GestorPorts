@@ -126,6 +126,28 @@ public class FirewallRuleDAO {
         return false; // Si ocurre una excepción, asumimos que la regla no existe
     }
 
+    public void updateRule(String originalName, FirewallRule rule) {
+        String sql = "UPDATE reglas_firewall SET nombre = ?, puerto = ?, protocolo = ?, aplicacion = ?, usuario = ?, grupo = ?, direccion_ip = ?, accion = ?, interfaz_red = ?, direccion = ? WHERE nombre = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, rule.getName());
+            statement.setInt(2, rule.getPort());
+            statement.setString(3, rule.getProtocol());
+            statement.setString(4, rule.getApplication());
+            statement.setString(5, rule.getUser());
+            statement.setString(6, rule.getGroup());
+            statement.setString(7, rule.getIpAddress());
+            statement.setString(8, rule.getAction());
+            statement.setString(9, rule.getNetworkInterface());
+            statement.setString(10, rule.getDirection());
+            statement.setString(11, originalName);
+
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void deleteRule(String ruleName) {
         String sql = "DELETE FROM reglas_firewall WHERE nombre = ?";
 
