@@ -69,9 +69,9 @@ public class FirewallGUI {
                     JPanel modifyPanel = ruleModifier.getModifyPanel();
 
                     // Declare the JFrame here
-                    JFrame modifyFrame = new JFrame("Modify Rule");
+                    JFrame modifyFrame = new JFrame("Modificar Regla");
 
-                    JButton saveButton = new JButton("Save");
+                    JButton saveButton = new JButton("Guardar");
                     saveButton.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent e) {
                             // Create a new FirewallRule with the modified values
