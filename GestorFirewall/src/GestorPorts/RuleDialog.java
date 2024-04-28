@@ -62,6 +62,20 @@ public class RuleDialog extends JDialog {
                         // Simulate loading time
                         Thread.sleep(1500);
 
+                        // Check if the port field is empty
+                        if (portField.getText() == null || portField.getText().trim().isEmpty()) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(RuleDialog.this,
+                                            "El campo del puerto no puede estar vacío.", "Error",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            });
+                            isError = true;
+                            return null;
+                        }
+
                         // Create a new FirewallRule from the input fields
                         rule = new FirewallRule(
                                 nomField.getText(),
@@ -76,12 +90,13 @@ public class RuleDialog extends JDialog {
                                 (String) sentitField.getSelectedItem());
 
                         // Validate the rule and check for duplicates
-                        if (!isRuleValid(rule)) {
+                        String ruleValidationError = isRuleValid(rule);
+                        if (ruleValidationError != null) {
                             SwingUtilities.invokeLater(new Runnable() {
                                 @Override
                                 public void run() {
                                     JOptionPane.showMessageDialog(RuleDialog.this,
-                                            "Error: Regla inválida.", "Error",
+                                            ruleValidationError, "Error",
                                             JOptionPane.ERROR_MESSAGE);
                                 }
                             });
@@ -94,7 +109,7 @@ public class RuleDialog extends JDialog {
                                 @Override
                                 public void run() {
                                     JOptionPane.showMessageDialog(RuleDialog.this,
-                                            "Error: Regla duplicada.", "Error",
+                                            " Regla duplicada.", "Error",
                                             JOptionPane.ERROR_MESSAGE);
                                 }
                             });
@@ -227,26 +242,23 @@ public class RuleDialog extends JDialog {
         loadingIndicator.setVisible(false);
     }
 
-    private boolean isRuleValid(FirewallRule rule) {
-        // Check if the rule name is empty
+    private String isRuleValid(FirewallRule rule) {
+        // Comprova si el nom de la regla està buit
         if (rule.getName() == null || rule.getName().trim().isEmpty()) {
-            return false;
+            return " El nom de la regla no pot estar buit.";
         }
 
-        // Check if the port number is valid
+        // Comprova si el número de port és vàlid
         if (rule.getPort() < 1 || rule.getPort() > 65535) {
-            return false;
+            return " El número de port no és vàlid.";
         }
 
-        // Check if the IP address is valid
+        // Comprova si l'adreça IP és vàlida
         if (!isValidIP(rule.getIpAddress())) {
-
-            return false;
+            return " L'adreça IP no és vàlida.";
         }
 
-        // Add more validation logic as needed...
-
-        return true;
+        return null;
     }
 
     private boolean isValidIP(String ip) {
