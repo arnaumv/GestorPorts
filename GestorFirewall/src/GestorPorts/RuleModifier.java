@@ -83,66 +83,79 @@ public class RuleModifier {
             DefaultTableModel tableModel, int selectedRow) {
         return new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                // Create a new FirewallRule with the modified values
-                FirewallRule modifiedRule = new FirewallRule(
-                        getNomFieldText(),
-                        Integer.parseInt(getPortFieldText()),
-                        getProtocolFieldText(),
-                        getAppFieldText(),
-                        getUsuariFieldText(),
-                        getGrupFieldText(),
-                        getIpFieldText(),
-                        getAccioFieldText(),
-                        getInterficieFieldText(),
-                        getSentitFieldText());
-
-                // Validate the rule before updating
-                if (!isRuleValid(modifiedRule)) {
-                    JOptionPane.showMessageDialog(null, "Regla incorrecte. Name, port, and IP cannot be empty.",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE);
-
-                    return;
-                }
-
-                // Check for duplicate rule
-                if (isDuplicateRule(modifiedRule)) {
-                    JOptionPane.showMessageDialog(null, "Nom de la regla duplicat", "Error", JOptionPane.ERROR_MESSAGE);
-
-                    return;
-                }
-
-                // Check if a rule with the new name already exists
-                if (!originalName.equals(modifiedRule.getName()) && manager.getRule(modifiedRule.getName()) != null) {
-                    JOptionPane.showMessageDialog(null, "A rule with this name already exists", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-
-                    return;
-                }
-
-                // Update the rule in the firewall manager
                 try {
-                    manager.updateRule(originalName, modifiedRule);
-                    System.out.println("Rule updated successfully");
-                    // Close the frame after successful update
-                    modifyFrame.dispose();
-                } catch (IllegalArgumentException ex) {
-                    // Show error message if the update failed
-                    JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                } catch (Exception ex) {
-                    // Handle the exception appropriately for your application
-                    System.out.println("Error updating rule: " + ex.getMessage());
-                }
+                    // Create a new FirewallRule with the modified values
+                    FirewallRule modifiedRule = new FirewallRule(
+                            getNomFieldText(),
+                            Integer.parseInt(getPortFieldText()),
+                            getProtocolFieldText(),
+                            getAppFieldText(),
+                            getUsuariFieldText(),
+                            getGrupFieldText(),
+                            getIpFieldText(),
+                            getAccioFieldText(),
+                            getInterficieFieldText(),
+                            getSentitFieldText());
 
-                // Update the table model
-                List<Object> modifiedRuleList = Arrays.asList(modifiedRule.getName(),
-                        modifiedRule.getPort(),
-                        modifiedRule.getProtocol(), modifiedRule.getApplication(), modifiedRule.getUser(),
-                        modifiedRule.getGroup(), modifiedRule.getIpAddress(), modifiedRule.getAction(),
-                        modifiedRule.getNetworkInterface(), modifiedRule.getDirection());
+                    // Validate the rule before updating
+                    String validationError = isRuleValid(modifiedRule);
+                    if (validationError != null) {
+                        JOptionPane.showMessageDialog(null,
+                                validationError,
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
 
-                for (int i = 0; i < 10; i++) {
-                    tableModel.setValueAt(modifiedRuleList.get(i), selectedRow, i);
+                        return;
+                    }
+
+                    // Check for duplicate rule
+                    if (isDuplicateRule(modifiedRule, originalName)) {
+                        JOptionPane.showMessageDialog(null, "Nom de la regla duplicat", "Error",
+                                JOptionPane.ERROR_MESSAGE);
+
+                        return;
+                    }
+
+                    // Check if a rule with the new name already exists
+                    if (!originalName.equals(modifiedRule.getName())
+                            && manager.getRule(modifiedRule.getName()) != null) {
+                        JOptionPane.showMessageDialog(null, "A rule with this name already exists", "Error",
+                                JOptionPane.ERROR_MESSAGE);
+
+                        return;
+                    }
+
+                    // Update the rule in the firewall manager
+                    try {
+                        manager.updateRule(originalName, modifiedRule);
+                        System.out.println("Rule updated successfully");
+                        // Close the frame after successful update
+                        modifyFrame.dispose();
+                    } catch (IllegalArgumentException ex) {
+                        // Show error message if the update failed
+                        JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    } catch (RuntimeException ex) {
+                        // Show error message if a runtime exception occurred
+                        JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    } catch (Exception ex) {
+                        // Handle the exception appropriately for your application
+                        System.out.println("Error updating rule: " + ex.getMessage());
+                    }
+
+                    // Update the table model
+                    List<Object> modifiedRuleList = Arrays.asList(modifiedRule.getName(),
+                            modifiedRule.getPort(),
+                            modifiedRule.getProtocol(), modifiedRule.getApplication(), modifiedRule.getUser(),
+                            modifiedRule.getGroup(), modifiedRule.getIpAddress(), modifiedRule.getAction(),
+                            modifiedRule.getNetworkInterface(), modifiedRule.getDirection());
+
+                    for (int i = 0; i < 10; i++) {
+                        tableModel.setValueAt(modifiedRuleList.get(i), selectedRow, i);
+                    }
+                } catch (NumberFormatException ex) {
+                    // Show custom error message
+                    JOptionPane.showMessageDialog(null, "El port ha de ser un numero correcte", "Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -188,30 +201,31 @@ public class RuleModifier {
         return (String) sentitField.getSelectedItem();
     }
 
-    private boolean isRuleValid(FirewallRule rule) {
+    private String isRuleValid(FirewallRule rule) {
         // Check if the rule name is empty
         if (rule.getName() == null || rule.getName().trim().isEmpty()) {
-            return false;
+            return "El nom de la regla no pot estar buit.";
         }
 
         // Check if the port number is valid
-        if (rule.getPort() < 1 || rule.getPort() > 65535) {
-            return false;
+        int port = rule.getPort();
+        if (port < 1 || port > 65535) {
+            return "El port ha de ser un número entre 1 i 65535.";
         }
 
         // Check if the IP address is empty
         if (rule.getIpAddress() == null || rule.getIpAddress().trim().isEmpty()) {
-            return false;
+            return "La direcció IP no pot estar buida.";
         }
 
         // Check if the IP address is valid
         if (!isValidIP(rule.getIpAddress())) {
-            return false;
+            return "La direcció IP no és vàlida.";
         }
 
         // Add more validation logic as needed...
 
-        return true;
+        return null;
     }
 
     private boolean isValidIP(String ip) {
@@ -235,8 +249,37 @@ public class RuleModifier {
         return ip.matches(regex);
     }
 
-    private boolean isDuplicateRule(FirewallRule rule) {
-        return dao.ruleExists(rule);
+    private boolean isDuplicateRule(FirewallRule modifiedRule, String originalName) {
+        // Get the existing rule with the same name
+        FirewallRule existingRule = manager.getRule(modifiedRule.getName());
+
+        // If there is no existing rule with the same name, it's not a duplicate
+        if (existingRule == null) {
+            return false;
+        }
+
+        // If the existing rule is the same rule that is being modified, it's not a
+        // duplicate
+        if (existingRule.getName().equals(originalName)) {
+            return false;
+        }
+
+        // If the existing rule has the same name but all other fields are different,
+        // it's not a duplicate
+        if (existingRule.getPort() != modifiedRule.getPort() ||
+                !existingRule.getProtocol().equals(modifiedRule.getProtocol()) ||
+                !existingRule.getApplication().equals(modifiedRule.getApplication()) ||
+                !existingRule.getUser().equals(modifiedRule.getUser()) ||
+                !existingRule.getGroup().equals(modifiedRule.getGroup()) ||
+                !existingRule.getIpAddress().equals(modifiedRule.getIpAddress()) ||
+                !existingRule.getAction().equals(modifiedRule.getAction()) ||
+                !existingRule.getNetworkInterface().equals(modifiedRule.getNetworkInterface()) ||
+                !existingRule.getDirection().equals(modifiedRule.getDirection())) {
+            return false;
+        }
+
+        // Otherwise, it's a duplicate
+        return true;
     }
 
 }
