@@ -7,10 +7,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.awt.event.ActionEvent;
 
 public class RuleModifier {
     private FirewallManager manager; // Asume que FirewallManager es la clase que maneja las reglas del firewall
+    private FirewallRuleDAO dao; // Asume que FirewallRuleDAO es la clase que maneja la persistencia de las
+                                 // reglas
 
     private List<Object> selectedRule;
     private JPanel modifyPanel;
@@ -19,6 +22,12 @@ public class RuleModifier {
 
     public RuleModifier(FirewallManager manager, List<Object> selectedRule) {
         this.manager = manager;
+        try {
+            this.dao = FirewallRuleDAO.getInstance();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Maneja esta excepción de la manera que prefieras
+        }
         this.selectedRule = selectedRule;
         this.modifyPanel = new JPanel(new GridLayout(0, 2));
     }
@@ -87,7 +96,29 @@ public class RuleModifier {
                         getInterficieFieldText(),
                         getSentitFieldText());
 
-                System.out.println("Modified rule: " + modifiedRule.toString());
+                // Validate the rule before updating
+                if (!isRuleValid(modifiedRule)) {
+                    JOptionPane.showMessageDialog(null, "Regla incorrecte. Name, port, and IP cannot be empty.",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+
+                    return;
+                }
+
+                // Check for duplicate rule
+                if (isDuplicateRule(modifiedRule)) {
+                    JOptionPane.showMessageDialog(null, "Nom de la regla duplicat", "Error", JOptionPane.ERROR_MESSAGE);
+
+                    return;
+                }
+
+                // Check if a rule with the new name already exists
+                if (!originalName.equals(modifiedRule.getName()) && manager.getRule(modifiedRule.getName()) != null) {
+                    JOptionPane.showMessageDialog(null, "A rule with this name already exists", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+
+                    return;
+                }
 
                 // Update the rule in the firewall manager
                 try {
@@ -95,6 +126,9 @@ public class RuleModifier {
                     System.out.println("Rule updated successfully");
                     // Close the frame after successful update
                     modifyFrame.dispose();
+                } catch (IllegalArgumentException ex) {
+                    // Show error message if the update failed
+                    JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 } catch (Exception ex) {
                     // Handle the exception appropriately for your application
                     System.out.println("Error updating rule: " + ex.getMessage());
@@ -153,4 +187,56 @@ public class RuleModifier {
     public String getSentitFieldText() {
         return (String) sentitField.getSelectedItem();
     }
+
+    private boolean isRuleValid(FirewallRule rule) {
+        // Check if the rule name is empty
+        if (rule.getName() == null || rule.getName().trim().isEmpty()) {
+            return false;
+        }
+
+        // Check if the port number is valid
+        if (rule.getPort() < 1 || rule.getPort() > 65535) {
+            return false;
+        }
+
+        // Check if the IP address is empty
+        if (rule.getIpAddress() == null || rule.getIpAddress().trim().isEmpty()) {
+            return false;
+        }
+
+        // Check if the IP address is valid
+        if (!isValidIP(rule.getIpAddress())) {
+            return false;
+        }
+
+        // Add more validation logic as needed...
+
+        return true;
+    }
+
+    private boolean isValidIP(String ip) {
+        // Check if the IP address is a range
+        if (ip.contains("-")) {
+            String[] parts = ip.split("-");
+            if (parts.length != 2) {
+                return false;
+            }
+
+            return isValidSingleIP(parts[0].trim()) && isValidSingleIP(parts[1].trim());
+        }
+
+        // If it's not a range, check if it's a valid single IP address
+        return isValidSingleIP(ip);
+    }
+
+    private boolean isValidSingleIP(String ip) {
+        // Use a regular expression (regex) to check if the IP address is valid
+        String regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+        return ip.matches(regex);
+    }
+
+    private boolean isDuplicateRule(FirewallRule rule) {
+        return dao.ruleExists(rule);
+    }
+
 }

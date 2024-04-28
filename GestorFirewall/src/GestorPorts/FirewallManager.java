@@ -18,6 +18,10 @@ public class FirewallManager {
         }
     }
 
+    public FirewallRule getRule(String ruleName) {
+        return dao.getRule(ruleName);
+    }
+
     public void addRule(FirewallRule rule) throws IllegalArgumentException {
         // Check if a rule with the same name already exists
         if (dao.getRule(rule.getName()) != null) {
@@ -110,8 +114,16 @@ public class FirewallManager {
 
     public void updateRule(String originalName, FirewallRule rule) throws IllegalArgumentException {
         // Check if a rule with the original name exists
-        if (dao.getRule(originalName) == null) {
+        FirewallRule existingRule = dao.getRule(originalName);
+        if (existingRule == null) {
             throw new IllegalArgumentException("No existe una regla con este nombre.");
+        }
+
+        // Check if the rule is a duplicate
+        for (FirewallRule existing : dao.getAllRules()) {
+            if (!existing.getName().equals(originalName) && existing.equals(rule)) {
+                throw new IllegalArgumentException("La regla ya existe.");
+            }
         }
 
         // Translate the action to a netsh action
