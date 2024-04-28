@@ -30,7 +30,7 @@ public class FirewallGUI {
         this.newRuleButton = new JButton("Nova Regla");
         this.historyButton = new JButton("Historial");
         this.historyList = new JList<>();
-        this.frame = new JFrame("Firewall Manager");
+        this.frame = new JFrame("Configurar Regles del Firewall");
 
         modifyButton.setEnabled(false);
         deleteButton.setEnabled(false);
