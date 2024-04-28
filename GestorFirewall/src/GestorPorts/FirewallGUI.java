@@ -65,53 +65,15 @@ public class FirewallGUI {
                     String originalName = (String) selectedRule.get(0);
                     System.out.println("Original rule name: " + originalName);
 
-                    RuleModifier ruleModifier = new RuleModifier(selectedRule);
+                    RuleModifier ruleModifier = new RuleModifier(manager, selectedRule);
                     JPanel modifyPanel = ruleModifier.getModifyPanel();
 
                     // Declare the JFrame here
                     JFrame modifyFrame = new JFrame("Modificar Regla");
 
                     JButton saveButton = new JButton("Guardar");
-                    saveButton.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            // Create a new FirewallRule with the modified values
-                            FirewallRule modifiedRule = new FirewallRule(
-                                    ruleModifier.getNomFieldText(),
-                                    Integer.parseInt(ruleModifier.getPortFieldText()),
-                                    ruleModifier.getProtocolFieldText(),
-                                    ruleModifier.getAppFieldText(),
-                                    ruleModifier.getUsuariFieldText(),
-                                    ruleModifier.getGrupFieldText(),
-                                    ruleModifier.getIpFieldText(),
-                                    ruleModifier.getAccioFieldText(),
-                                    ruleModifier.getInterficieFieldText(),
-                                    ruleModifier.getSentitFieldText());
-
-                            System.out.println("Modified rule: " + modifiedRule.toString());
-
-                            // Update the rule in the firewall manager
-                            try {
-                                manager.updateRule(originalName, modifiedRule);
-                                System.out.println("Rule updated successfully");
-                                // Close the frame after successful update
-                                modifyFrame.dispose();
-                            } catch (Exception ex) {
-                                // Handle the exception appropriately for your application
-                                System.out.println("Error updating rule: " + ex.getMessage());
-                            }
-
-                            // Update the table model
-                            List<Object> modifiedRuleList = Arrays.asList(modifiedRule.getName(),
-                                    modifiedRule.getPort(),
-                                    modifiedRule.getProtocol(), modifiedRule.getApplication(), modifiedRule.getUser(),
-                                    modifiedRule.getGroup(), modifiedRule.getIpAddress(), modifiedRule.getAction(),
-                                    modifiedRule.getNetworkInterface(), modifiedRule.getDirection());
-
-                            for (int i = 0; i < 10; i++) {
-                                tableModel.setValueAt(modifiedRuleList.get(i), selectedRow, i);
-                            }
-                        }
-                    });
+                    saveButton.addActionListener(ruleModifier.getSaveButtonActionListener(modifyFrame, originalName,
+                            tableModel, selectedRow));
                     modifyPanel.add(saveButton);
 
                     modifyFrame.setContentPane(modifyPanel);

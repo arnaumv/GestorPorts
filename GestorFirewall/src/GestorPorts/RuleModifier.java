@@ -1,16 +1,24 @@
 package GestorPorts;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
+import java.util.Arrays;
 import java.util.List;
 import java.awt.GridLayout;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class RuleModifier {
+    private FirewallManager manager; // Asume que FirewallManager es la clase que maneja las reglas del firewall
+
     private List<Object> selectedRule;
     private JPanel modifyPanel;
     private JTextField nomField, portField, appField, usuariField, grupField, ipField, interficieField;
     private JComboBox<String> protocolField, accioField, sentitField;
 
-    public RuleModifier(List<Object> selectedRule) {
+    public RuleModifier(FirewallManager manager, List<Object> selectedRule) {
+        this.manager = manager;
         this.selectedRule = selectedRule;
         this.modifyPanel = new JPanel(new GridLayout(0, 2));
     }
@@ -60,6 +68,50 @@ public class RuleModifier {
         modifyPanel.add(sentitField);
 
         return modifyPanel;
+    }
+
+    public ActionListener getSaveButtonActionListener(JFrame modifyFrame, String originalName,
+            DefaultTableModel tableModel, int selectedRow) {
+        return new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // Create a new FirewallRule with the modified values
+                FirewallRule modifiedRule = new FirewallRule(
+                        getNomFieldText(),
+                        Integer.parseInt(getPortFieldText()),
+                        getProtocolFieldText(),
+                        getAppFieldText(),
+                        getUsuariFieldText(),
+                        getGrupFieldText(),
+                        getIpFieldText(),
+                        getAccioFieldText(),
+                        getInterficieFieldText(),
+                        getSentitFieldText());
+
+                System.out.println("Modified rule: " + modifiedRule.toString());
+
+                // Update the rule in the firewall manager
+                try {
+                    manager.updateRule(originalName, modifiedRule);
+                    System.out.println("Rule updated successfully");
+                    // Close the frame after successful update
+                    modifyFrame.dispose();
+                } catch (Exception ex) {
+                    // Handle the exception appropriately for your application
+                    System.out.println("Error updating rule: " + ex.getMessage());
+                }
+
+                // Update the table model
+                List<Object> modifiedRuleList = Arrays.asList(modifiedRule.getName(),
+                        modifiedRule.getPort(),
+                        modifiedRule.getProtocol(), modifiedRule.getApplication(), modifiedRule.getUser(),
+                        modifiedRule.getGroup(), modifiedRule.getIpAddress(), modifiedRule.getAction(),
+                        modifiedRule.getNetworkInterface(), modifiedRule.getDirection());
+
+                for (int i = 0; i < 10; i++) {
+                    tableModel.setValueAt(modifiedRuleList.get(i), selectedRow, i);
+                }
+            }
+        };
     }
 
     public String getNomFieldText() {
