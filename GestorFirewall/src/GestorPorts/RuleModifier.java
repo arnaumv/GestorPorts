@@ -83,82 +83,124 @@ public class RuleModifier {
             DefaultTableModel tableModel, int selectedRow) {
         return new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                try {
-                    // Create a new FirewallRule with the modified values
-                    FirewallRule modifiedRule = new FirewallRule(
-                            getNomFieldText(),
-                            Integer.parseInt(getPortFieldText()),
-                            getProtocolFieldText(),
-                            getAppFieldText(),
-                            getUsuariFieldText(),
-                            getGrupFieldText(),
-                            getIpFieldText(),
-                            getAccioFieldText(),
-                            getInterficieFieldText(),
-                            getSentitFieldText());
 
-                    // Validate the rule before updating
-                    String validationError = isRuleValid(modifiedRule);
-                    if (validationError != null) {
-                        JOptionPane.showMessageDialog(null,
-                                validationError,
-                                "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                setInteractiveElementsEnabled(false);
 
-                        return;
+                // Create a SwingWorker to perform the long-running task
+                SwingWorker<FirewallRule, Void> worker = new SwingWorker<FirewallRule, Void>() {
+                    private FirewallRule modifiedRule;
+
+                    @Override
+                    protected FirewallRule doInBackground() throws Exception {
+                        // Create a new FirewallRule with the modified values
+                        modifiedRule = new FirewallRule(
+                                getNomFieldText(),
+                                Integer.parseInt(getPortFieldText()),
+                                getProtocolFieldText(),
+                                getAppFieldText(),
+                                getUsuariFieldText(),
+                                getGrupFieldText(),
+                                getIpFieldText(),
+                                getAccioFieldText(),
+                                getInterficieFieldText(),
+                                getSentitFieldText());
+
+                        return modifiedRule;
                     }
 
-                    // Check for duplicate rule
-                    if (isDuplicateRule(modifiedRule, originalName)) {
-                        JOptionPane.showMessageDialog(null, "Nom de la regla duplicat", "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                    @Override
+                    protected void done() {
+                        try {
+                            // Validate the rule before updating
+                            String validationError = isRuleValid(modifiedRule);
+                            if (validationError != null) {
+                                JOptionPane.showMessageDialog(null,
+                                        validationError,
+                                        "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                                setInteractiveElementsEnabled(true);
+                                return;
+                            }
 
-                        return;
+                            // Check for duplicate rule
+                            if (isDuplicateRule(modifiedRule, originalName)) {
+                                JOptionPane.showMessageDialog(null, "Nom de la regla duplicat", "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                                setInteractiveElementsEnabled(true);
+                                return;
+                            }
+
+                            // Check if a rule with the new name already exists
+                            if (!originalName.equals(modifiedRule.getName())
+                                    && manager.getRule(modifiedRule.getName()) != null) {
+                                JOptionPane.showMessageDialog(null, "A rule with this name already exists", "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                                setInteractiveElementsEnabled(true);
+                                return;
+                            }
+
+                            // Update the rule in the firewall manager
+                            try {
+                                // Add a delay of 1.5 seconds
+                                Thread.sleep(1500);
+
+                                manager.updateRule(originalName, modifiedRule);
+                                System.out.println("Rule updated successfully");
+                                // Close the frame after successful update
+                                modifyFrame.dispose();
+                            } catch (IllegalArgumentException ex) {
+                                // Show error message if the update failed
+                                JOptionPane.showMessageDialog(null, ex.getMessage(), "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                                setInteractiveElementsEnabled(true);
+                            } catch (RuntimeException ex) {
+                                // Show error message if a runtime exception occurred
+                                JOptionPane.showMessageDialog(null, ex.getMessage(), "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                                setInteractiveElementsEnabled(true);
+                            } catch (Exception ex) {
+                                // Handle the exception appropriately for your application
+                                System.out.println("Error updating rule: " + ex.getMessage());
+                                setInteractiveElementsEnabled(true);
+                            }
+
+                            // Update the table model
+                            List<Object> modifiedRuleList = Arrays.asList(modifiedRule.getName(),
+                                    modifiedRule.getPort(),
+                                    modifiedRule.getProtocol(), modifiedRule.getApplication(), modifiedRule.getUser(),
+                                    modifiedRule.getGroup(), modifiedRule.getIpAddress(), modifiedRule.getAction(),
+                                    modifiedRule.getNetworkInterface(), modifiedRule.getDirection());
+
+                            for (int i = 0; i < 10; i++) {
+                                tableModel.setValueAt(modifiedRuleList.get(i), selectedRow, i);
+                            }
+                        } catch (NumberFormatException ex) {
+                            // Show custom error message
+                            JOptionPane.showMessageDialog(null, "El port ha de ser un numero correcte", "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            setInteractiveElementsEnabled(true);
+                        }
                     }
+                };
 
-                    // Check if a rule with the new name already exists
-                    if (!originalName.equals(modifiedRule.getName())
-                            && manager.getRule(modifiedRule.getName()) != null) {
-                        JOptionPane.showMessageDialog(null, "A rule with this name already exists", "Error",
-                                JOptionPane.ERROR_MESSAGE);
-
-                        return;
-                    }
-
-                    // Update the rule in the firewall manager
-                    try {
-                        manager.updateRule(originalName, modifiedRule);
-                        System.out.println("Rule updated successfully");
-                        // Close the frame after successful update
-                        modifyFrame.dispose();
-                    } catch (IllegalArgumentException ex) {
-                        // Show error message if the update failed
-                        JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    } catch (RuntimeException ex) {
-                        // Show error message if a runtime exception occurred
-                        JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    } catch (Exception ex) {
-                        // Handle the exception appropriately for your application
-                        System.out.println("Error updating rule: " + ex.getMessage());
-                    }
-
-                    // Update the table model
-                    List<Object> modifiedRuleList = Arrays.asList(modifiedRule.getName(),
-                            modifiedRule.getPort(),
-                            modifiedRule.getProtocol(), modifiedRule.getApplication(), modifiedRule.getUser(),
-                            modifiedRule.getGroup(), modifiedRule.getIpAddress(), modifiedRule.getAction(),
-                            modifiedRule.getNetworkInterface(), modifiedRule.getDirection());
-
-                    for (int i = 0; i < 10; i++) {
-                        tableModel.setValueAt(modifiedRuleList.get(i), selectedRow, i);
-                    }
-                } catch (NumberFormatException ex) {
-                    // Show custom error message
-                    JOptionPane.showMessageDialog(null, "El port ha de ser un numero correcte", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
+                // Start the SwingWorker
+                worker.execute();
             }
         };
+    }
+
+    public void setInteractiveElementsEnabled(boolean enabled) {
+        nomField.setEnabled(enabled);
+        portField.setEnabled(enabled);
+        protocolField.setEnabled(enabled);
+        appField.setEnabled(enabled);
+        usuariField.setEnabled(enabled);
+        grupField.setEnabled(enabled);
+        ipField.setEnabled(enabled);
+        accioField.setEnabled(enabled);
+        interficieField.setEnabled(enabled);
+        sentitField.setEnabled(enabled);
+
     }
 
     public String getNomFieldText() {
@@ -202,6 +244,11 @@ public class RuleModifier {
     }
 
     private String isRuleValid(FirewallRule rule) {
+        // Check if the rule is null
+        if (rule == null) {
+            return "El port no es correcte.";
+        }
+
         // Check if the rule name is empty
         if (rule.getName() == null || rule.getName().trim().isEmpty()) {
             return "El nom de la regla no pot estar buit.";

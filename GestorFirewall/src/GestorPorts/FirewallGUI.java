@@ -68,13 +68,38 @@ public class FirewallGUI {
                     RuleModifier ruleModifier = new RuleModifier(manager, selectedRule);
                     JPanel modifyPanel = ruleModifier.getModifyPanel();
 
+                    // Set the preferred size of the panel
+                    modifyPanel.setPreferredSize(new Dimension(400, 400));
+
                     // Declare the JFrame here
                     JFrame modifyFrame = new JFrame("Modificar Regla");
+
+                    // Create a new panel for the buttons with a FlowLayout
+                    JPanel buttonPanel = new JPanel(new FlowLayout());
 
                     JButton saveButton = new JButton("Guardar");
                     saveButton.addActionListener(ruleModifier.getSaveButtonActionListener(modifyFrame, originalName,
                             tableModel, selectedRow));
-                    modifyPanel.add(saveButton);
+                    buttonPanel.add(saveButton);
+
+                    // Add a cancel button that closes the frame
+                    JButton cancelButton = new JButton("Cancelar");
+                    cancelButton.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            modifyFrame.dispose();
+                        }
+                    });
+                    buttonPanel.add(cancelButton);
+
+                    // Add some space above the buttons
+                    modifyPanel.add(Box.createVerticalStrut(20));
+
+                    // Add the button panel to the modify panel
+                    modifyPanel.add(buttonPanel);
+
+                    // Add a border to the panel to create space between the buttons and the fields
+                    // above
+                    modifyPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
                     modifyFrame.setContentPane(modifyPanel);
                     modifyFrame.pack();
