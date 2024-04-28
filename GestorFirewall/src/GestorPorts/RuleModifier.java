@@ -41,7 +41,7 @@ public class RuleModifier {
         modifyPanel.add(new JLabel("Port:"));
         modifyPanel.add(portField);
 
-        protocolField = new JComboBox<>(new String[] { "TCP", "UDP" });
+        protocolField = new JComboBox<>(new String[] { "TCP", "UDP", "ICMP", "IP" });
         protocolField.setSelectedItem((String) selectedRule.get(2));
         modifyPanel.add(new JLabel("Protocol:"));
         modifyPanel.add(protocolField);

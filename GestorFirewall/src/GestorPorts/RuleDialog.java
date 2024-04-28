@@ -29,7 +29,7 @@ public class RuleDialog extends JDialog {
 
         nomField = new JTextField();
         portField = new JTextField();
-        protocolField = new JComboBox<>(new String[] { "TCP", "UDP" });
+        protocolField = new JComboBox<>(new String[] { "TCP", "UDP", "ICMP", "IP" });
         appField = new JTextField();
         usuariField = new JTextField();
         grupField = new JTextField();
