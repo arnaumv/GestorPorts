@@ -5,6 +5,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 
 public class FirewallGUI {
@@ -51,13 +52,42 @@ public class FirewallGUI {
         });
 
         modifyButton.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow != -1) {
-                    RuleDialog dialog = new RuleDialog(frame);
-                    // Populate dialog with current rule data
-                    dialog.setVisible(true);
+                    List<Object> selectedRule = new ArrayList<>();
+                    for (int i = 0; i < 10; i++) {
+                        selectedRule.add(tableModel.getValueAt(selectedRow, i));
+                    }
+
+                    RuleModifier ruleModifier = new RuleModifier(selectedRule);
+                    JPanel modifyPanel = ruleModifier.getModifyPanel();
+
+                    JButton saveButton = new JButton("Save");
+                    saveButton.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            selectedRule.set(0, ruleModifier.getNomFieldText());
+                            selectedRule.set(1, ruleModifier.getPortFieldText());
+                            selectedRule.set(2, ruleModifier.getProtocolFieldText());
+                            selectedRule.set(3, ruleModifier.getAppFieldText());
+                            selectedRule.set(4, ruleModifier.getUsuariFieldText());
+                            selectedRule.set(5, ruleModifier.getGrupFieldText());
+                            selectedRule.set(6, ruleModifier.getIpFieldText());
+                            selectedRule.set(7, ruleModifier.getAccioFieldText());
+                            selectedRule.set(8, ruleModifier.getInterficieFieldText());
+                            selectedRule.set(9, ruleModifier.getSentitFieldText());
+
+                            for (int i = 0; i < 10; i++) {
+                                tableModel.setValueAt(selectedRule.get(i), selectedRow, i);
+                            }
+                        }
+                    });
+                    modifyPanel.add(saveButton);
+
+                    JFrame modifyFrame = new JFrame("Modify Rule");
+                    modifyFrame.setContentPane(modifyPanel);
+                    modifyFrame.pack();
+                    modifyFrame.setVisible(true);
                 }
             }
         });
