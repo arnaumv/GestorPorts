@@ -1,11 +1,8 @@
-package GestorPorts;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 
 public class FirewallGUI {
     private FirewallManager manager;
@@ -20,8 +17,8 @@ public class FirewallGUI {
 
     public FirewallGUI() {
         this.manager = new FirewallManager();
-        this.tableModel = new DefaultTableModel(new Object[] { "Nom", "Port", "Protocol", "App", "Usuari", "Grup",
-                "IP", "Accio", "Interficie", "Sentit" }, 0);
+        this.tableModel = new DefaultTableModel(new Object[] { "Nom", "Port", "Protocol", "App", "Usuari", "Grup", "IP",
+                "Accio", "Interficie", "Sentit" }, 0);
         this.table = new JTable(tableModel);
         this.modifyButton = new JButton("Modificar");
         this.deleteButton = new JButton("Esborrar");
@@ -44,9 +41,6 @@ public class FirewallGUI {
             public void actionPerformed(ActionEvent e) {
                 RuleDialog dialog = new RuleDialog(frame);
                 dialog.setVisible(true);
-                if (dialog.isRuleSaved()) {
-                    addRuleToTable(dialog.getRule());
-                }
             }
         });
 
@@ -71,27 +65,6 @@ public class FirewallGUI {
                     // Add entry to history
                 }
             }
-        });
-
-        // Load rules from database
-        List<FirewallRule> rules = manager.getAllRules();
-        for (FirewallRule rule : rules) {
-            addRuleToTable(rule);
-        }
-    }
-
-    private void addRuleToTable(FirewallRule rule) {
-        tableModel.addRow(new Object[] {
-                rule.getName(),
-                rule.getPort(),
-                rule.getProtocol(),
-                rule.getApplication(),
-                rule.getUser(),
-                rule.getGroup(),
-                rule.getIpAddress(),
-                rule.getAction(),
-                rule.getNetworkInterface(),
-                rule.getDirection()
         });
     }
 
