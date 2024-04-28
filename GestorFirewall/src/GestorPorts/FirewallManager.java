@@ -29,8 +29,10 @@ public class FirewallManager {
 
         // Build the firewall command
         StringBuilder command = new StringBuilder(String.format(
-                "netsh advfirewall firewall add rule name=\"%s\" dir=in action=%s protocol=%s localport=%d remoteip=%s",
-                rule.getName(), netshAction, rule.getProtocol().toLowerCase(), rule.getPort(), rule.getIpAddress()));
+                "netsh advfirewall firewall add rule name=\"%s\" dir=%s action=%s protocol=%s localport=%d remoteip=%s",
+                rule.getName(), rule.getDirection().toLowerCase(), netshAction, rule.getProtocol().toLowerCase(),
+                rule.getPort(), rule.getIpAddress()));
+        System.out.println("Executing command: " + command.toString());
 
         // If user, group, application or interface are specified, add them to the
         // command
@@ -65,6 +67,8 @@ public class FirewallManager {
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
+            System.out.println(e.getMessage()); // Agrega esta línea
+
             if (process != null) {
                 reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
                 String line;
@@ -96,6 +100,8 @@ public class FirewallManager {
         try {
             dao.addRule(rule);
         } catch (SQLException e) {
+            System.out.println(e.getMessage());
+
             // Handle the exception appropriately for your application
             // For example, you could throw a new exception with a custom message
             throw new RuntimeException("Error adding rule to database: " + rule.getName(), e);
