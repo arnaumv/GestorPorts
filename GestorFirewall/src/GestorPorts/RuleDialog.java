@@ -254,7 +254,7 @@ public class RuleDialog extends JDialog {
         }
 
         // Comprova si l'adreça IP és vàlida
-        if (!isValidIP(rule.getIpAddress())) {
+        if (rule.getIpAddress() != null && !rule.getIpAddress().isEmpty() && !isValidIP(rule.getIpAddress())) {
             return " L'adreça IP no és vàlida.";
         }
 

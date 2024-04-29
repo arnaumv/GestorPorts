@@ -260,13 +260,8 @@ public class RuleModifier {
             return "El port ha de ser un número entre 1 i 65535.";
         }
 
-        // Check if the IP address is empty
-        if (rule.getIpAddress() == null || rule.getIpAddress().trim().isEmpty()) {
-            return "La direcció IP no pot estar buida.";
-        }
-
-        // Check if the IP address is valid
-        if (!isValidIP(rule.getIpAddress())) {
+        // Check if the IP address is valid, if it is not empty
+        if (rule.getIpAddress() != null && !rule.getIpAddress().trim().isEmpty() && !isValidIP(rule.getIpAddress())) {
             return "La direcció IP no és vàlida.";
         }
 

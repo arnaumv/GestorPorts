@@ -39,9 +39,15 @@ public class FirewallManager {
 
         // Construye el comando de firewall
         StringBuilder command = new StringBuilder(String.format(
-                "netsh advfirewall firewall add rule name=\"%s\" dir=%s action=%s protocol=%s localport=%d remoteip=%s",
+                "netsh advfirewall firewall add rule name=\"%s\" dir=%s action=%s protocol=%s localport=%d",
                 rule.getName(), rule.getDirection().toLowerCase(), netshAction, rule.getProtocol().toLowerCase(),
-                rule.getPort(), rule.getIpAddress()));
+                rule.getPort()));
+
+        // Agrega la IP remota al comando solo si se especifica
+        if (rule.getIpAddress() != null && !rule.getIpAddress().isEmpty()) {
+            command.append(" remoteip=").append(rule.getIpAddress());
+        }
+
         System.out.println("Executing command: " + command.toString());
 
         // Si se especifican usuario, grupo, aplicación o interfaz, los agrega al
@@ -176,9 +182,15 @@ public class FirewallManager {
 
         // Construye el comando de firewall para actualizar la regla
         StringBuilder command = new StringBuilder(String.format(
-                "netsh advfirewall firewall set rule name=\"%s\" new dir=%s action=%s protocol=%s localport=%d remoteip=%s",
+                "netsh advfirewall firewall set rule name=\"%s\" new dir=%s action=%s protocol=%s localport=%d",
                 originalName, rule.getDirection().toLowerCase(), netshAction, rule.getProtocol().toLowerCase(),
-                rule.getPort(), rule.getIpAddress()));
+                rule.getPort()));
+
+        // Solo agrega la parte 'remoteip' si la dirección IP no está vacía
+        if (rule.getIpAddress() != null && !rule.getIpAddress().isEmpty()) {
+            command.append(String.format(" remoteip=%s", rule.getIpAddress()));
+        }
+
         System.out.println("Executing command: " + command.toString());
 
         // Si se especifican usuario, grupo, aplicación o interfaz, los agrega al
