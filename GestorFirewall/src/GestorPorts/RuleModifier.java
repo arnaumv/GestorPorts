@@ -10,16 +10,19 @@ import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.awt.event.ActionEvent;
 
+// Esta clase es responsable de modificar las reglas del firewall
 public class RuleModifier {
     private FirewallManager manager; // Asume que FirewallManager es la clase que maneja las reglas del firewall
     private FirewallRuleDAO dao; // Asume que FirewallRuleDAO es la clase que maneja la persistencia de las
                                  // reglas
 
-    private List<Object> selectedRule;
-    private JPanel modifyPanel;
+    private List<Object> selectedRule; // La regla seleccionada para modificar
+    private JPanel modifyPanel; // El panel de modificación
+    // Los campos de texto y desplegables para cada atributo de la regla
     private JTextField nomField, portField, appField, usuariField, grupField, ipField, interficieField;
     private JComboBox<String> protocolField, accioField, sentitField;
 
+    // Constructor de la clase
     public RuleModifier(FirewallManager manager, List<Object> selectedRule) {
         this.manager = manager;
         try {
@@ -31,6 +34,8 @@ public class RuleModifier {
         this.selectedRule = selectedRule;
         this.modifyPanel = new JPanel(new GridLayout(0, 2));
     }
+
+    // Método para obtener el panel de modificación
 
     public JPanel getModifyPanel() {
         nomField = new JTextField((String) selectedRule.get(0));
@@ -78,6 +83,8 @@ public class RuleModifier {
 
         return modifyPanel;
     }
+
+    // Método para obtener el ActionListener del botón de guardar
 
     public ActionListener getSaveButtonActionListener(JFrame modifyFrame, String originalName,
             DefaultTableModel tableModel, int selectedRow) {
@@ -189,6 +196,8 @@ public class RuleModifier {
         };
     }
 
+    // Método para habilitar o deshabilitar los elementos interactivos
+
     public void setInteractiveElementsEnabled(boolean enabled) {
         nomField.setEnabled(enabled);
         portField.setEnabled(enabled);
@@ -243,6 +252,7 @@ public class RuleModifier {
         return (String) sentitField.getSelectedItem();
     }
 
+    // Método para validar si una regla es válida
     private String isRuleValid(FirewallRule rule) {
         // Check if the rule is null
         if (rule == null) {

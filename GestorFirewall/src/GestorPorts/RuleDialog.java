@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.concurrent.ExecutionException;
 
 public class RuleDialog extends JDialog {
+    // Variables de instancia para la interfaz de usuario y la regla de firewall
     private boolean ruleSaved = false;
     private FirewallRule rule;
     private JTextField nomField;
@@ -27,6 +28,7 @@ public class RuleDialog extends JDialog {
     public RuleDialog(Frame owner) {
         super(owner, "Nova Regla", true);
 
+        // Inicialización de los campos de la interfaz de usuario
         nomField = new JTextField();
         portField = new JTextField();
         protocolField = new JComboBox<>(new String[] { "TCP", "UDP", "ICMP", "IP" });
@@ -40,29 +42,30 @@ public class RuleDialog extends JDialog {
         saveButton = new JButton("Guardar");
         cancelButton = new JButton("Cancelar");
 
-        // Initialize the loading indicator
+        // Inicialización del indicador de carga
         loadingIndicator = new JLabel("Cargando...");
         loadingIndicator.setVisible(false);
 
+        // Acción del botón de guardar
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Disable interactive elements
+                // Desactivar elementos interactivos durante la carga
                 setInteractiveElementsEnabled(false);
 
-                // Show loading indicator
+                // Mostrar indicador de carga
                 showLoadingIndicator();
 
-                // Create a SwingWorker to perform the long-running task
+                // Crear un SwingWorker para realizar la tarea de larga duración
                 SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-                    private boolean isError = false; // Add this line
+                    private boolean isError = false; // Variable para controlar si hay un error
 
                     @Override
                     protected Void doInBackground() throws Exception {
-                        // Simulate loading time
+                        // Simular tiempo de carga
                         Thread.sleep(1500);
 
-                        // Check if the port field is empty
+                        // Comprobar si el campo del puerto está vacío
                         if (portField.getText() == null || portField.getText().trim().isEmpty()) {
                             SwingUtilities.invokeLater(new Runnable() {
                                 @Override
@@ -76,7 +79,7 @@ public class RuleDialog extends JDialog {
                             return null;
                         }
 
-                        // Create a new FirewallRule from the input fields
+                        // Crear una nueva regla de firewall a partir de los campos de entrada
                         rule = new FirewallRule(
                                 nomField.getText(),
                                 Integer.parseInt(portField.getText()),
@@ -89,7 +92,7 @@ public class RuleDialog extends JDialog {
                                 interficieField.getText(),
                                 (String) sentitField.getSelectedItem());
 
-                        // Validate the rule and check for duplicates
+                        // Validar la regla y comprobar si hay duplicados
                         String ruleValidationError = isRuleValid(rule);
                         if (ruleValidationError != null) {
                             SwingUtilities.invokeLater(new Runnable() {
@@ -100,7 +103,7 @@ public class RuleDialog extends JDialog {
                                             JOptionPane.ERROR_MESSAGE);
                                 }
                             });
-                            isError = true; // Add this line
+                            isError = true; // Marcar que hay un error
                             return null;
                         }
 
@@ -113,11 +116,11 @@ public class RuleDialog extends JDialog {
                                             JOptionPane.ERROR_MESSAGE);
                                 }
                             });
-                            isError = true; // Add this line
+                            isError = true; // Marcar que hay un error
                             return null;
                         }
 
-                        // Add the rule to the firewall
+                        // Añadir la regla al firewall
                         try {
                             FirewallManager manager = new FirewallManager();
                             manager.addRule(rule);
@@ -131,7 +134,7 @@ public class RuleDialog extends JDialog {
                                             JOptionPane.ERROR_MESSAGE);
                                 }
                             });
-                            isError = true; // Add this line
+                            isError = true; // Marcar que hay un error
                             return null;
                         }
 
@@ -140,20 +143,20 @@ public class RuleDialog extends JDialog {
 
                     @Override
                     protected void done() {
-                        // Hide loading indicator
+                        // Ocultar indicador de carga
                         hideLoadingIndicator();
 
-                        // Enable interactive elements
+                        // Habilitar elementos interactivos
                         setInteractiveElementsEnabled(true);
 
                         try {
-                            get(); // This line can throw an ExecutionException if doInBackground() threw an
-                                   // exception
+                            get(); // Esta línea puede lanzar una ExecutionException si doInBackground() lanzó una
+                                   // excepción
                         } catch (InterruptedException e) {
-                            // This happens if the SwingWorker's thread was interrupted
+                            // Esto ocurre si el hilo de SwingWorker fue interrumpido
                             e.printStackTrace();
                         } catch (ExecutionException e) {
-                            // This happens if we throw an exception from doInBackground().
+                            // Esto ocurre si lanzamos una excepción desde doInBackground().
                             Throwable cause = e.getCause();
                             JOptionPane.showMessageDialog(RuleDialog.this,
                                     "Error: " + cause.getMessage(), "Error",
@@ -161,26 +164,29 @@ public class RuleDialog extends JDialog {
                             return;
                         }
 
-                        // If there was no error, close the dialog
-                        if (!isError) { // Modify this line
+                        // Si no hubo error, cerrar el diálogo
+                        if (!isError) { // Modificar esta línea
                             RuleDialog.this.dispose();
                         }
                     }
                 };
 
-                // Start the SwingWorker
+                // Iniciar el SwingWorker
                 worker.execute();
             }
         });
 
+        // Acción del botón de cancelar
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Close dialog without saving
+                // Cerrar diálogo sin guardar
                 RuleDialog.this.dispose();
             }
         });
 
+        // Configuración del layout y adición de los componentes a la interfaz de
+        // usuario
         setLayout(new GridLayout(13, 2));
         add(new JLabel("Nom: "));
         add(nomField);
@@ -211,6 +217,7 @@ public class RuleDialog extends JDialog {
         pack();
     }
 
+    // Métodos getter para la regla y el estado de guardado de la regla
     public boolean isRuleSaved() {
         return ruleSaved;
     }
@@ -219,6 +226,8 @@ public class RuleDialog extends JDialog {
         return rule;
     }
 
+    // Métodos para habilitar/deshabilitar elementos interactivos y mostrar/ocultar
+    // el indicador de carga
     private void setInteractiveElementsEnabled(boolean enabled) {
         nomField.setEnabled(enabled);
         portField.setEnabled(enabled);
@@ -242,18 +251,19 @@ public class RuleDialog extends JDialog {
         loadingIndicator.setVisible(false);
     }
 
+    // Método para validar la regla de firewall
     private String isRuleValid(FirewallRule rule) {
-        // Comprova si el nom de la regla està buit
+        // Comprobar si el nombre de la regla está vacío
         if (rule.getName() == null || rule.getName().trim().isEmpty()) {
             return " El nom de la regla no pot estar buit.";
         }
 
-        // Comprova si el número de port és vàlid
+        // Comprobar si el número de puerto es válido
         if (rule.getPort() < 1 || rule.getPort() > 65535) {
             return " El número de port no és vàlid.";
         }
 
-        // Comprova si l'adreça IP és vàlida
+        // Comprobar si la dirección IP es válida
         if (rule.getIpAddress() != null && !rule.getIpAddress().isEmpty() && !isValidIP(rule.getIpAddress())) {
             return " L'adreça IP no és vàlida.";
         }
@@ -261,8 +271,9 @@ public class RuleDialog extends JDialog {
         return null;
     }
 
+    // Métodos para validar la dirección IP
     private boolean isValidIP(String ip) {
-        // Check if the IP address is a range
+        // Comprobar si la dirección IP es un rango
         if (ip.contains("-")) {
             String[] parts = ip.split("-");
             if (parts.length != 2) {
@@ -272,16 +283,18 @@ public class RuleDialog extends JDialog {
             return isValidSingleIP(parts[0].trim()) && isValidSingleIP(parts[1].trim());
         }
 
-        // If it's not a range, check if it's a valid single IP address
+        // Si no es un rango, comprobar si es una dirección IP válida
         return isValidSingleIP(ip);
     }
 
     private boolean isValidSingleIP(String ip) {
-        // Use a regular expression (regex) to check if the IP address is valid
+        // Usar una expresión regular (regex) para comprobar si la dirección IP es
+        // válida
         String regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
         return ip.matches(regex);
     }
 
+    // Método para comprobar si la regla es duplicada
     private boolean isDuplicateRule(FirewallRule rule) {
         FirewallRuleDAO dao;
         try {
