@@ -1,0 +1,150 @@
+package GestorPorts;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.sql.SQLException;
+import java.util.List;
+
+public class FirewallManager {
+    private FirewallRuleDAO dao;
+
+    public FirewallManager() {
+        try {
+            this.dao = FirewallRuleDAO.getInstance();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public FirewallRule getRule(String ruleName) {
+        return dao.getRule(ruleName);
+    }
+
+    public void addRule(FirewallRule rule) throws IllegalArgumentException {
+        if (dao.getRule(rule.getName()) != null) {
+            throw new IllegalArgumentException("Una regla con el mismo nombre ya existe.");
+        }
+
+        String iptablesAction = rule.getAction().equals("Permetre") ? "ACCEPT" : "DROP";
+
+        StringBuilder command = new StringBuilder(String.format(
+                "iptables -A INPUT -p %s --dport %d -j %s",
+                rule.getProtocol().toLowerCase(), rule.getPort(), iptablesAction));
+
+        if (rule.getIpAddress() != null && !rule.getIpAddress().isEmpty()) {
+            command.append(" -s ").append(rule.getIpAddress());
+        }
+
+        System.out.println("Executing command: " + command.toString());
+
+        Process process = null;
+        BufferedReader reader = null;
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", command.toString());
+            process = processBuilder.start();
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                String line;
+                StringBuilder errorMessage = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    errorMessage.append(line);
+                }
+                throw new IOException(
+                        "Error executing shell command: " + command + ". Error: " + errorMessage.toString());
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+
+            if (process != null) {
+                reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                String line;
+                StringBuilder errorMessage = new StringBuilder();
+                try {
+                    while ((line = reader.readLine()) != null) {
+                        errorMessage.append(line);
+                    }
+                    System.out.println("Error details: " + errorMessage.toString());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new RuntimeException("Error adding firewall rule: " + rule.getName(), e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        try {
+            dao.addRule(rule);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            throw new RuntimeException("Error adding rule to database: " + rule.getName(), e);
+        }
+    }
+
+    public void updateRule(String originalName, FirewallRule rule) throws IllegalArgumentException {
+        // Nota: iptables no permite la actualización directa de una regla. 
+        // Por lo tanto, debemos eliminar la regla original y luego agregar la nueva regla.
+        deleteRule(originalName);
+        addRule(rule);
+    }
+
+    public void deleteRule(String ruleName) throws SQLException {
+        Process process = null;
+        BufferedReader reader = null;
+        String line = null;
+
+        try {
+            FirewallRuleDAO dao = FirewallRuleDAO.getInstance();
+            dao.deleteRule(ruleName);
+
+            String[] command = { "/bin/bash", "-c", "iptables -D INPUT -m comment --comment \"" + ruleName + "\"" };
+
+            process = Runtime.getRuntime().exec(command, null, null);
+
+            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+
+            if (process != null) {
+                try {
+                    reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                    StringBuilder errorMessage = new StringBuilder();
+                    while ((line = reader.readLine()) != null) {
+                        errorMessage.append(line);
+                    }
+                    System.out.println("Error details: " + errorMessage.toString());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new RuntimeException("Error deleting firewall rule: " + ruleName, e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public List<FirewallRule> getAllRules() {
+        return dao.getAllRules();
+    }
+}
