@@ -25,6 +25,7 @@ public class FirewallRuleDAO {
         }
 
         String sql = "INSERT INTO reglas_firewall (nombre, puerto, protocolo, aplicacion, usuario, grupo, direccion_ip, accion, interfaz_red, direccion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sqlHistory = "INSERT INTO reglas_historial (nombre, puerto, protocolo, aplicacion, usuario, grupo, direccion_ip, accion, interfaz_red, direccion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, rule.getName());
@@ -44,7 +45,26 @@ public class FirewallRuleDAO {
             if (affectedRows == 0) {
                 throw new SQLException("Creating rule failed, no rows affected.");
             }
+        }
 
+        try (PreparedStatement statement = connection.prepareStatement(sqlHistory, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, rule.getName());
+            statement.setInt(2, rule.getPort());
+            statement.setString(3, rule.getProtocol());
+            statement.setString(4, rule.getApplication());
+            statement.setString(5, rule.getUser());
+            statement.setString(6, rule.getGroup());
+            statement.setString(7, rule.getIpAddress());
+            statement.setString(8, rule.getAction());
+            statement.setString(9, rule.getNetworkInterface());
+            statement.setString(10, rule.getDirection());
+            statement.setTimestamp(11, new Timestamp(System.currentTimeMillis()));
+
+            int affectedRows = statement.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new SQLException("Creating rule in history failed, no rows affected.");
+            }
         }
     }
 
