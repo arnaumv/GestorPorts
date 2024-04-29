@@ -169,12 +169,20 @@ public class FirewallRuleDAO {
     }
 
     public void deleteRule(String ruleName) {
-        String sql = "DELETE FROM reglas_firewall WHERE nombre = ?";
+        String deleteSql = "delete from reglas_firewall where nombre = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, ruleName);
+        try (PreparedStatement deleteStatement = connection.prepareStatement(deleteSql)) {
+            deleteStatement.setString(1, ruleName);
+            deleteStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
-            statement.executeUpdate();
+        String updateSql = "update reglas_historial set fecha_borrada = current_timestamp where nombre = ?";
+
+        try (PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
+            updateStatement.setString(1, ruleName);
+            updateStatement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }

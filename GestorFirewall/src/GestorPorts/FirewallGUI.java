@@ -5,6 +5,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -113,8 +114,36 @@ public class FirewallGUI {
             public void actionPerformed(ActionEvent e) {
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow != -1) {
-                    // Implement rule deletion logic
-                    // Add entry to history
+                    // Get rule information
+                    StringBuilder ruleInfo = new StringBuilder();
+                    for (int i = 0; i < table.getColumnCount(); i++) {
+                        ruleInfo.append(table.getColumnName(i)).append(": ").append(table.getValueAt(selectedRow, i))
+                                .append("\n");
+                    }
+
+                    // Create a DeleteRuleDialog
+                    DeleteRuleDialog dialog = new DeleteRuleDialog(null, ruleInfo.toString());
+                    dialog.setVisible(true);
+
+                    if (dialog.getUserOption() == JOptionPane.YES_OPTION) {
+                        // Get rule name
+                        String ruleName = table.getValueAt(selectedRow, 0).toString(); // Change 0 to the column index
+                                                                                       // of the rule name
+
+                        // Delete rule from database and operating system
+                        // Use the existing manager instance instead of creating a new one
+                        try {
+                            manager.deleteRule(ruleName);
+
+                            // Remove rule from table
+                            ((DefaultTableModel) table.getModel()).removeRow(selectedRow);
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                            // Show a dialog to the user indicating that there was an error
+                            JOptionPane.showMessageDialog(null, "Error deleting rule: " + ex.getMessage(), "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
                 }
             }
         });

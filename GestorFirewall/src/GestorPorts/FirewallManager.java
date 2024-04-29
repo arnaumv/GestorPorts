@@ -243,6 +243,61 @@ public class FirewallManager {
         }
     }
 
+    public void deleteRule(String ruleName) throws SQLException {
+        Process process = null;
+        BufferedReader reader = null;
+        String line = null;
+
+        try {
+            // Delete rule from database
+            FirewallRuleDAO dao = FirewallRuleDAO.getInstance(); // Get instance from singleton or dependency injection
+            dao.deleteRule(ruleName);
+
+            // Build command to delete firewall rule
+            String[] command = { "cmd.exe", "/c", "netsh advfirewall firewall delete rule name=\"" + ruleName + "\"" };
+
+            // Execute command
+            process = Runtime.getRuntime().exec(command, null, null);
+
+            // Read command output
+            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+
+            // Wait for command to finish
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            // If there's an error executing the command, print the error
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+
+            if (process != null) {
+                try {
+                    reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                    StringBuilder errorMessage = new StringBuilder();
+                    while ((line = reader.readLine()) != null) {
+                        errorMessage.append(line);
+                    }
+                    System.out.println("Error details: " + errorMessage.toString());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new RuntimeException("Error deleting firewall rule: " + ruleName, e);
+        } finally {
+            // Close the reader in the finally block to make sure it gets closed,
+            // whether an exception occurs or not
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     public List<FirewallRule> getAllRules() {
         // Devuelve todas las reglas de la base de datos
         return dao.getAllRules();
