@@ -47,133 +47,121 @@ public class RuleDialog extends JDialog {
         loadingIndicator.setVisible(false);
 
         // Acción del botón de guardar
-        saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Desactivar elementos interactivos durante la carga
-                setInteractiveElementsEnabled(false);
+        saveButton.addActionListener(e -> {
+            // Desactivar elementos interactivos durante la carga
+            setInteractiveElementsEnabled(false);
 
-                // Mostrar indicador de carga
-                showLoadingIndicator();
+            // Mostrar indicador de carga
+            showLoadingIndicator();
 
-                // Crear un SwingWorker para realizar la tarea de larga duración
-                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-                    private boolean isError = false; // Variable para controlar si hay un error
+            // Crear un SwingWorker para realizar la tarea de larga duración
+            SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                private boolean isError = false; // Variable para controlar si hay un error
 
-                    @Override
-                    protected Void doInBackground() throws Exception {
-                        // Simular tiempo de carga
-                        Thread.sleep(1500);
+                @Override
+                protected Void doInBackground() throws Exception {
+                    // Simular tiempo de carga
+                    Thread.sleep(1500);
 
-                        // Comprobar si el campo del puerto está vacío
-                        if (portField.getText() == null || portField.getText().trim().isEmpty()) {
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    JOptionPane.showMessageDialog(RuleDialog.this,
-                                            "El campo del puerto no puede estar vacío.", "Error",
-                                            JOptionPane.ERROR_MESSAGE);
-                                }
-                            });
-                            isError = true;
-                            return null;
-                        }
-
-                        // Crear una nueva regla de firewall a partir de los campos de entrada
-                        rule = new FirewallRule(
-                                nomField.getText(),
-                                Integer.parseInt(portField.getText()),
-                                (String) protocolField.getSelectedItem(),
-                                appField.getText(),
-                                usuariField.getText(),
-                                grupField.getText(),
-                                ipField.getText(),
-                                (String) accioField.getSelectedItem(),
-                                interficieField.getText(),
-                                (String) sentitField.getSelectedItem());
-
-                        // Validar la regla y comprobar si hay duplicados
-                        String ruleValidationError = isRuleValid(rule);
-                        if (ruleValidationError != null) {
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    JOptionPane.showMessageDialog(RuleDialog.this,
-                                            ruleValidationError, "Error",
-                                            JOptionPane.ERROR_MESSAGE);
-                                }
-                            });
-                            isError = true; // Marcar que hay un error
-                            return null;
-                        }
-
-                        if (isDuplicateRule(rule)) {
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    JOptionPane.showMessageDialog(RuleDialog.this,
-                                            " Regla duplicada.", "Error",
-                                            JOptionPane.ERROR_MESSAGE);
-                                }
-                            });
-                            isError = true; // Marcar que hay un error
-                            return null;
-                        }
-
-                        // Añadir la regla al firewall
-                        try {
-                            FirewallManager manager = new FirewallManager();
-                            manager.addRule(rule);
-                            ruleSaved = true;
-                        } catch (Exception ex) {
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    JOptionPane.showMessageDialog(RuleDialog.this,
-                                            "Error: " + ex.getMessage(), "Error",
-                                            JOptionPane.ERROR_MESSAGE);
-                                }
-                            });
-                            isError = true; // Marcar que hay un error
-                            return null;
-                        }
-
+                    // Comprobar si el campo del puerto está vacío
+                    if (isNullOrEmpty(portField.getText())) {
+                        showErrorDialog("El campo del puerto no puede estar vacío.");
+                        isError = true;
                         return null;
                     }
 
-                    @Override
-                    protected void done() {
-                        // Ocultar indicador de carga
-                        hideLoadingIndicator();
-
-                        // Habilitar elementos interactivos
-                        setInteractiveElementsEnabled(true);
-
-                        try {
-                            get(); // Esta línea puede lanzar una ExecutionException si doInBackground() lanzó una
-                                   // excepción
-                        } catch (InterruptedException e) {
-                            // Esto ocurre si el hilo de SwingWorker fue interrumpido
-                            e.printStackTrace();
-                        } catch (ExecutionException e) {
-                            // Esto ocurre si lanzamos una excepción desde doInBackground().
-                            Throwable cause = e.getCause();
-                            JOptionPane.showMessageDialog(RuleDialog.this,
-                                    "Error: " + cause.getMessage(), "Error",
-                                    JOptionPane.ERROR_MESSAGE);
-                            return;
+                    // Comprobar si el puerto es un número válido
+                    int port;
+                    try {
+                        port = Integer.parseInt(portField.getText());
+                        if (port < 1 || port > 65535) {
+                            throw new NumberFormatException();
                         }
-
-                        // Si no hubo error, cerrar el diálogo
-                        if (!isError) { // Modificar esta línea
-                            RuleDialog.this.dispose();
-                        }
+                    } catch (NumberFormatException ex) {
+                        showErrorDialog("El número de puerto no es válido. Debe ser un número entre 1 y 65535.");
+                        isError = true;
+                        return null;
                     }
-                };
 
-                // Iniciar el SwingWorker
-                worker.execute();
-            }
+                    // Crear una nueva regla de firewall a partir de los campos de entrada
+                    rule = new FirewallRule(
+                            nomField.getText(),
+                            Integer.parseInt(portField.getText()),
+                            (String) protocolField.getSelectedItem(),
+                            appField.getText(),
+                            usuariField.getText(),
+                            grupField.getText(),
+                            ipField.getText(),
+                            (String) accioField.getSelectedItem(),
+                            interficieField.getText(),
+                            (String) sentitField.getSelectedItem());
+
+                    // Validar la regla y comprobar si hay duplicados
+                    String ruleValidationError = isRuleValid(rule);
+                    if (ruleValidationError != null) {
+                        showErrorDialog(ruleValidationError);
+                        isError = true; // Marcar que hay un error
+                        return null;
+                    }
+
+                    if (isDuplicateRule(rule)) {
+                        showErrorDialog("Regla duplicada.");
+                        isError = true; // Marcar que hay un error
+                        return null;
+                    }
+
+                    // Añadir la regla al firewall
+                    try {
+                        FirewallManager manager = new FirewallManager();
+                        manager.addRule(rule);
+                        ruleSaved = true;
+                    } catch (Exception ex) {
+                        // LANZA LOS ERRROES DE PARTE DEL FIREWALL MANAEGER
+                        showErrorDialog("Errorrrr: " + ex.getMessage());
+                        isError = true; // Marcar que hay un error
+                        return null;
+                    }
+
+                    return null;
+                }
+
+                @Override
+                protected void done() {
+                    // Ocultar indicador de carga
+                    hideLoadingIndicator();
+
+                    // Habilitar elementos interactivos
+                    setInteractiveElementsEnabled(true);
+
+                    try {
+                        get(); // Esta línea puede lanzar una ExecutionException si doInBackground() lanzó una
+                               // excepción
+                    } catch (InterruptedException | ExecutionException e) {
+                        // Esto ocurre si lanzamos una excepción desde doInBackground().
+                        Throwable cause = e.getCause();
+                        showErrorDialog("Error: " + cause.getMessage());
+                        return;
+                    }
+
+                    // Si no hubo error, cerrar el diálogo
+                    if (!isError) {
+                        RuleDialog.this.dispose();
+                    }
+                }
+
+                private boolean isNullOrEmpty(String str) {
+                    return str == null || str.trim().isEmpty();
+                }
+
+                private void showErrorDialog(String message) {
+                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(RuleDialog.this,
+                            message, "Error",
+                            JOptionPane.ERROR_MESSAGE));
+                }
+            };
+
+            // Iniciar el SwingWorker
+            worker.execute();
         });
 
         // Acción del botón de cancelar
@@ -258,21 +246,20 @@ public class RuleDialog extends JDialog {
             return " El nom de la regla no pot estar buit.";
         }
 
-        // Comprobar si el número de puerto es válido
-        if (rule.getPort() < 1 || rule.getPort() > 65535) {
-            return " El número de port no és vàlid.";
-        }
-
         // Comprobar si la dirección IP es válida
         if (rule.getIpAddress() != null && !rule.getIpAddress().isEmpty() && !isValidIP(rule.getIpAddress())) {
-            return " L'adreça IP no és vàlida.";
+            return " L'adreça IP no és vàlida. ";
         }
 
         return null;
     }
 
-    // Métodos para validar la dirección IP
+    // Método para validar la dirección IP
     private boolean isValidIP(String ip) {
+        // Usar una expresión regular (regex) para comprobar si la dirección IP es
+        // válida
+        String regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+
         // Comprobar si la dirección IP es un rango
         if (ip.contains("-")) {
             String[] parts = ip.split("-");
@@ -280,17 +267,10 @@ public class RuleDialog extends JDialog {
                 return false;
             }
 
-            return isValidSingleIP(parts[0].trim()) && isValidSingleIP(parts[1].trim());
+            return parts[0].trim().matches(regex) && parts[1].trim().matches(regex);
         }
 
         // Si no es un rango, comprobar si es una dirección IP válida
-        return isValidSingleIP(ip);
-    }
-
-    private boolean isValidSingleIP(String ip) {
-        // Usar una expresión regular (regex) para comprobar si la dirección IP es
-        // válida
-        String regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
         return ip.matches(regex);
     }
 
