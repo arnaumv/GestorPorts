@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.util.concurrent.ExecutionException;
 
 public class RuleDialog extends JDialog {
@@ -64,6 +65,20 @@ public class RuleDialog extends JDialog {
                         // Simular tiempo de carga
                         Thread.sleep(1500);
 
+                        // Comprobar si el campo del puerto está vacío
+                        if (portField.getText() == null || portField.getText().trim().isEmpty()) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(RuleDialog.this,
+                                            "El campo del puerto no puede estar vacío.", "Error",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            });
+                            isError = true;
+                            return null;
+                        }
+
                         // Crear una nueva regla de firewall a partir de los campos de entrada
                         rule = new FirewallRule(
                                 nomField.getText(),
@@ -76,6 +91,34 @@ public class RuleDialog extends JDialog {
                                 (String) accioField.getSelectedItem(),
                                 interficieField.getText(),
                                 (String) sentitField.getSelectedItem());
+
+                        // Validar la regla y comprobar si hay duplicados
+                        String ruleValidationError = isRuleValid(rule);
+                        if (ruleValidationError != null) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(RuleDialog.this,
+                                            ruleValidationError, "Error",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            });
+                            isError = true; // Marcar que hay un error
+                            return null;
+                        }
+
+                        if (isDuplicateRule(rule)) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(RuleDialog.this,
+                                            " Regla duplicada.", "Error",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            });
+                            isError = true; // Marcar que hay un error
+                            return null;
+                        }
 
                         // Añadir la regla al firewall
                         try {
@@ -206,5 +249,60 @@ public class RuleDialog extends JDialog {
 
     private void hideLoadingIndicator() {
         loadingIndicator.setVisible(false);
+    }
+
+    // Método para validar la regla de firewall
+    private String isRuleValid(FirewallRule rule) {
+        // Comprobar si el nombre de la regla está vacío
+        if (rule.getName() == null || rule.getName().trim().isEmpty()) {
+            return " El nom de la regla no pot estar buit.";
+        }
+
+        // Comprobar si el número de puerto es válido
+        if (rule.getPort() < 1 || rule.getPort() > 65535) {
+            return " El número de port no és vàlid.";
+        }
+
+        // Comprobar si la dirección IP es válida
+        if (rule.getIpAddress() != null && !rule.getIpAddress().isEmpty() && !isValidIP(rule.getIpAddress())) {
+            return " L'adreça IP no és vàlida.";
+        }
+
+        return null;
+    }
+
+    // Métodos para validar la dirección IP
+    private boolean isValidIP(String ip) {
+        // Comprobar si la dirección IP es un rango
+        if (ip.contains("-")) {
+            String[] parts = ip.split("-");
+            if (parts.length != 2) {
+                return false;
+            }
+
+            return isValidSingleIP(parts[0].trim()) && isValidSingleIP(parts[1].trim());
+        }
+
+        // Si no es un rango, comprobar si es una dirección IP válida
+        return isValidSingleIP(ip);
+    }
+
+    private boolean isValidSingleIP(String ip) {
+        // Usar una expresión regular (regex) para comprobar si la dirección IP es
+        // válida
+        String regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+        return ip.matches(regex);
+    }
+
+    // Método para comprobar si la regla es duplicada
+    private boolean isDuplicateRule(FirewallRule rule) {
+        FirewallRuleDAO dao;
+        try {
+            dao = FirewallRuleDAO.getInstance();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false; // O maneja esta excepción de la manera que prefieras
+        }
+        return dao.ruleExists(rule);
     }
 }

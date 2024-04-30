@@ -37,43 +37,37 @@ public class FirewallManager {
         // Traduce la acción a una acción de netsh
         String netshAction = rule.getAction().equals("Permetre") ? "allow" : "block";
 
-        // Verifica si el nombre de la regla está vacío
-        if (rule.getName() == null || rule.getName().isEmpty()) {
-            throw new IllegalArgumentException("El nombre de la regla no puede estar vacío.");
-        }
-
-        // Construye el comando de firewall para actualizar la regla
+        // Construye el comando de firewall
         StringBuilder command = new StringBuilder(String.format(
-                "netsh advfirewall firewall set rule name=\"%s\" new dir=%s action=%s protocol=%s localport=%d",
+                "netsh advfirewall firewall add rule name=\"%s\" dir=%s action=%s protocol=%s localport=%d",
                 rule.getName(), rule.getDirection().toLowerCase(), netshAction, rule.getProtocol().toLowerCase(),
                 rule.getPort()));
 
-        // Solo agrega la parte 'remoteip' si la dirección IP no está vacía
+        // Agrega la IP remota al comando solo si se especifica
         if (rule.getIpAddress() != null && !rule.getIpAddress().isEmpty()) {
-            command.append(String.format(" remoteip=%s", rule.getIpAddress()));
+            command.append(" remoteip=").append(rule.getIpAddress());
         }
 
         System.out.println("Executing command: " + command.toString());
 
         // Si se especifican usuario, grupo, aplicación o interfaz, los agrega al
         // comando
-        if (rule.getApplication() != null && !rule.getApplication().isEmpty()) {
+        if (rule.getApplication() != null) {
             command.append(" program=").append(rule.getApplication());
         }
-        if (rule.getUser() != null && !rule.getUser().isEmpty()) {
+        if (rule.getUser() != null) {
             command.append(" user=").append(rule.getUser());
         }
-        if (rule.getGroup() != null && !rule.getGroup().isEmpty()) {
+        if (rule.getGroup() != null) {
             command.append(" group=").append(rule.getGroup());
         }
-        if (rule.getNetworkInterface() != null && !rule.getNetworkInterface().isEmpty()) {
+        if (rule.getNetworkInterface() != null) {
             command.append(" interface=").append(rule.getNetworkInterface());
         }
 
-        // Ejecuta el comando para actualizar la regla
+        // Ejecuta el comando en el sistema operativo
         Process process = null;
         BufferedReader reader = null;
-        StringBuilder errorMessage = new StringBuilder();
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", command.toString());
             process = processBuilder.start();
@@ -82,6 +76,7 @@ public class FirewallManager {
                 // Si el comando falla, lanza una excepción
                 reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
                 String line;
+                StringBuilder errorMessage = new StringBuilder();
                 while ((line = reader.readLine()) != null) {
                     errorMessage.append(line);
                 }
@@ -96,21 +91,18 @@ public class FirewallManager {
             if (process != null) {
                 reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
                 String line;
+                StringBuilder errorMessage = new StringBuilder();
                 try {
                     while ((line = reader.readLine()) != null) {
                         errorMessage.append(line);
                     }
+                    System.out.println("Error details: " + errorMessage.toString());
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
             }
             throw new RuntimeException("Error adding firewall rule: " + rule.getName(), e);
         } finally {
-            // Imprime el error de CMD en el bloque finally
-            if (!errorMessage.toString().isEmpty()) {
-                System.out.println("Error details: " + errorMessage.toString());
-            }
-
             // Cierra el lector en el bloque finally para asegurarse de que se cierre,
             // ocurra una excepción o no
             if (reader != null) {
@@ -130,44 +122,8 @@ public class FirewallManager {
             System.out.println(e.getMessage());
             throw new RuntimeException("Error adding rule to database: " + rule.getName(), e);
         }
+
     }
-
-    // public void addRule(FirewallRule rule) throws IllegalArgumentException {
-    // // Check if a rule with the same name already exists
-    // if (dao.getRule(rule.getName()) != null) {
-    // throw new IllegalArgumentException("Una regla con el mismo nombre ya
-    // existe.");
-    // }
-
-    // // Translate the action to an iptables action
-    // String iptablesAction = rule.getAction().equals("Permetre") ? "ACCEPT" :
-    // "DROP";
-
-    // // Build the firewall command
-    // StringBuilder command = new StringBuilder(String.format(
-    // "iptables -A INPUT -p %s --dport %d -j %s",
-    // rule.getProtocol(), rule.getPort(), iptablesAction));
-
-    // // If user, group or interface are specified, add them to the command
-    // if (rule.getUser() != null) {
-    // command.append(" -m owner --uid-owner ").append(rule.getUser());
-    // }
-    // if (rule.getGroup() != null) {
-    // command.append(" -m owner --gid-owner ").append(rule.getGroup());
-    // }
-    // if (rule.getNetworkInterface() != null) {
-    // command.append(" -i ").append(rule.getNetworkInterface());
-    // }
-
-    // // Execute the firewall command
-    // try {
-    // ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c",
-    // command.toString());
-    // Process process = processBuilder.start();
-    // process.waitFor();
-    // } catch (IOException | InterruptedException e) {
-    // e.printStackTrace();
-    // }
 
     public void updateRule(String originalName, FirewallRule rule) throws IllegalArgumentException {
         // Verifica si existe una regla con el nombre original
