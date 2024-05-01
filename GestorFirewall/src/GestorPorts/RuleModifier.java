@@ -19,8 +19,8 @@ public class RuleModifier {
     private List<Object> selectedRule; // La regla seleccionada para modificar
     private JPanel modifyPanel; // El panel de modificación
     // Los campos de texto y desplegables para cada atributo de la regla
-    private JTextField nomField, portField, appField, usuariField, grupField, ipField, interficieField;
-    private JComboBox<String> protocolField, accioField, sentitField;
+    private JTextField nomField, portField, appField, usuariField, grupField, ipField;
+    private JComboBox<String> protocolField, accioField, sentitField, interficieField;
 
     // Constructor de la clase
     public RuleModifier(FirewallManager manager, List<Object> selectedRule) {
@@ -72,7 +72,8 @@ public class RuleModifier {
         modifyPanel.add(new JLabel("Acció:"));
         modifyPanel.add(accioField);
 
-        interficieField = new JTextField((String) selectedRule.get(8));
+        interficieField = new JComboBox<String>(new String[] { "LAN", "WIRELESS", "RAS" });
+        interficieField.setSelectedItem((String) selectedRule.get(8));
         modifyPanel.add(new JLabel("Interfície:"));
         modifyPanel.add(interficieField);
 
@@ -248,7 +249,7 @@ public class RuleModifier {
     }
 
     public String getInterficieFieldText() {
-        return interficieField.getText();
+        return (String) interficieField.getSelectedItem();
     }
 
     public String getSentitFieldText() {

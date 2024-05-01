@@ -62,15 +62,16 @@ public class FirewallManager {
             command.append(" remoteip=").append(rule.getIpAddress());
         }
 
-        System.out.println("Executing command: " + command.toString());
-
         // Si se especifican aplicación o interfaz, los agrega al comando
-        if (rule.getApplication() != null) {
+        if (rule.getApplication() != null && !rule.getApplication().isEmpty()) {
             command.append(" program=").append(rule.getApplication());
         }
-        if (rule.getNetworkInterface() != null) {
-            command.append(" interface=").append(rule.getNetworkInterface());
+        if (rule.getNetworkInterface() != null && !rule.getNetworkInterface().isEmpty()) {
+            // Asegúrate de que el valor de la interfaz de red sea "lan", "wireless" o "ras"
+            command.append(" interfacetype=").append(rule.getNetworkInterface());
         }
+
+        System.out.println("Executing command: " + command.toString());
 
         // Ejecuta el comando en el sistema operativo
         Process process = null;
@@ -168,15 +169,16 @@ public class FirewallManager {
             command.append(String.format(" remoteip=%s", rule.getIpAddress()));
         }
 
-        System.out.println("Executing command: " + command.toString());
-
         // Si se especifican aplicación o interfaz, los agrega al comando
-        if (rule.getApplication() != null) {
+        if (rule.getApplication() != null && !rule.getApplication().isEmpty()) {
             command.append(" program=").append(rule.getApplication());
         }
-        if (rule.getNetworkInterface() != null) {
-            command.append(" interface=").append(rule.getNetworkInterface());
+        if (rule.getNetworkInterface() != null && !rule.getNetworkInterface().isEmpty()) {
+            // Asegúrate de que el valor de la interfaz de red sea "lan", "wireless" o "ras"
+            command.append(" interfacetype=").append(rule.getNetworkInterface());
         }
+
+        System.out.println("Executing command: " + command.toString());
 
         // Ejecuta el comando para actualizar la regla
         Process process = null;

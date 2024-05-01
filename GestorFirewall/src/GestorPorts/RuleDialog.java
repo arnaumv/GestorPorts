@@ -19,7 +19,7 @@ public class RuleDialog extends JDialog {
     private JTextField grupField;
     private JTextField ipField;
     private JComboBox<String> accioField;
-    private JTextField interficieField;
+    private JComboBox<String> interficieField;
     private JComboBox<String> sentitField;
     private JButton saveButton;
     private JButton cancelButton;
@@ -37,7 +37,7 @@ public class RuleDialog extends JDialog {
         grupField = new JTextField();
         ipField = new JTextField();
         accioField = new JComboBox<>(new String[] { "Permetre", "Denegar" });
-        interficieField = new JTextField();
+        interficieField = new JComboBox<>(new String[] { "LAN", "WIRELESS", "RAS" });
         sentitField = new JComboBox<>(new String[] { "IN", "OUT" });
         saveButton = new JButton("Guardar");
         cancelButton = new JButton("Cancelar");
@@ -93,7 +93,7 @@ public class RuleDialog extends JDialog {
                             grupField.getText(),
                             ipField.getText(),
                             (String) accioField.getSelectedItem(),
-                            interficieField.getText(),
+                            (String) interficieField.getSelectedItem(), // Cambiado aquí
                             (String) sentitField.getSelectedItem());
 
                     // Validar la regla y comprobar si hay duplicados
