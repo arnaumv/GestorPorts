@@ -64,7 +64,7 @@ public class FirewallManager {
 
         // Si se especifican aplicación o interfaz, los agrega al comando
         if (rule.getApplication() != null && !rule.getApplication().isEmpty()) {
-            command.append(" program=").append(rule.getApplication());
+            command.append(" program=\"").append(rule.getApplication()).append("\"");
         }
         if (rule.getNetworkInterface() != null && !rule.getNetworkInterface().isEmpty()
                 && !rule.getNetworkInterface().equalsIgnoreCase("Totes")) {

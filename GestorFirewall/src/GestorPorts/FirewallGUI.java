@@ -22,26 +22,42 @@ public class FirewallGUI {
     private JFrame frame;
 
     public FirewallGUI() {
+        // Obtenemos la instancia del administrador del firewall
         this.manager = FirewallManager.getInstance();
+
+        // Creamos el modelo de la tabla con los nombres de las columnas
         this.tableModel = new DefaultTableModel(new Object[] { "Nom", "Port", "Protocol", "App", "Usuari", "Grup",
                 "IP", "Accio", "Interficie", "Sentit" }, 0);
+
+        // Creamos la tabla con el modelo definido
         this.table = new JTable(tableModel);
+
+        // Creamos los botones y los nombramos
         this.modifyButton = new JButton("Modificar");
         this.deleteButton = new JButton("Esborrar");
         this.newRuleButton = new JButton("Nova Regla");
         this.historyButton = new JButton("Historial");
+
+        // Creamos la lista del historial
         this.historyList = new JList<>();
+
+        // Creamos el marco de la ventana y le damos un título
         this.frame = new JFrame("Configurar Regles del Firewall");
 
+        // Deshabilitamos los botones de modificar y eliminar al inicio
         modifyButton.setEnabled(false);
         deleteButton.setEnabled(false);
 
+        // Añadimos un listener a la selección de la tabla para habilitar los botones
+        // cuando se selecciona una fila
         table.getSelectionModel().addListSelectionListener(e -> {
             boolean isRowSelected = table.getSelectedRow() != -1;
             modifyButton.setEnabled(isRowSelected);
             deleteButton.setEnabled(isRowSelected);
         });
 
+        // Añadimos un listener al botón de nueva regla para abrir el diálogo de
+        // creación de reglas
         newRuleButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -53,6 +69,8 @@ public class FirewallGUI {
             }
         });
 
+        // Añadimos un listener al botón de modificar para abrir el diálogo de
+        // modificación de reglas
         modifyButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int selectedRow = table.getSelectedRow();
@@ -62,20 +80,20 @@ public class FirewallGUI {
                         selectedRule.add(tableModel.getValueAt(selectedRow, i));
                     }
 
-                    // Store the original name of the rule
+                    // Guardamos el nombre original de la regla
                     String originalName = (String) selectedRule.get(0);
                     System.out.println("Original rule name: " + originalName);
 
                     RuleModifier ruleModifier = new RuleModifier(manager, selectedRule);
                     JPanel modifyPanel = ruleModifier.getModifyPanel();
 
-                    // Set the preferred size of the panel
+                    // Establecemos el tamaño preferido del panel
                     modifyPanel.setPreferredSize(new Dimension(400, 400));
 
-                    // Declare the JFrame here
+                    // Declaramos el marco de la ventana aquí
                     JFrame modifyFrame = new JFrame("Modificar Regla");
 
-                    // Create a new panel for the buttons with a FlowLayout
+                    // Creamos un nuevo panel para los botones con un FlowLayout
                     JPanel buttonPanel = new JPanel(new FlowLayout());
 
                     JButton saveButton = new JButton("Guardar");
@@ -83,7 +101,7 @@ public class FirewallGUI {
                             tableModel, selectedRow));
                     buttonPanel.add(saveButton);
 
-                    // Add a cancel button that closes the frame
+                    // Añadimos un botón de cancelar que cierra el marco
                     JButton cancelButton = new JButton("Cancelar");
                     cancelButton.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent e) {
@@ -92,14 +110,14 @@ public class FirewallGUI {
                     });
                     buttonPanel.add(cancelButton);
 
-                    // Add some space above the buttons
+                    // Añadimos un poco de espacio encima de los botones
                     modifyPanel.add(Box.createVerticalStrut(20));
 
-                    // Add the button panel to the modify panel
+                    // Añadimos el panel de botones al panel de modificación
                     modifyPanel.add(buttonPanel);
 
-                    // Add a border to the panel to create space between the buttons and the fields
-                    // above
+                    // Añadimos un borde al panel para crear espacio entre los botones y los campos
+                    // de arriba
                     modifyPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
                     modifyFrame.setContentPane(modifyPanel);
@@ -109,37 +127,40 @@ public class FirewallGUI {
             }
         });
 
+        // Añadimos un listener al botón de eliminar para abrir el diálogo de
+        // confirmación de eliminación
         deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow != -1) {
-                    // Get rule information
+                    // Obtenemos la información de la regla
                     StringBuilder ruleInfo = new StringBuilder();
                     for (int i = 0; i < table.getColumnCount(); i++) {
                         ruleInfo.append(table.getColumnName(i)).append(": ").append(table.getValueAt(selectedRow, i))
                                 .append("\n");
                     }
 
-                    // Create a DeleteRuleDialog
+                    // Creamos un DeleteRuleDialog
                     DeleteRuleDialog dialog = new DeleteRuleDialog(null, ruleInfo.toString());
                     dialog.setVisible(true);
 
                     if (dialog.getUserOption() == JOptionPane.YES_OPTION) {
-                        // Get rule name
-                        String ruleName = table.getValueAt(selectedRow, 0).toString(); // Change 0 to the column index
-                                                                                       // of the rule name
+                        // Obtenemos el nombre de la regla
+                        String ruleName = table.getValueAt(selectedRow, 0).toString(); // Cambia 0 al índice de la
+                                                                                       // columna
+                                                                                       // del nombre de la regla
 
-                        // Delete rule from database and operating system
-                        // Use the existing manager instance instead of creating a new one
+                        // Eliminamos la regla de la base de datos y del sistema operativo
+                        // Usamos la instancia de manager existente en lugar de crear una nueva
                         try {
                             manager.deleteRule(ruleName);
 
-                            // Remove rule from table
+                            // Eliminamos la regla de la tabla
                             ((DefaultTableModel) table.getModel()).removeRow(selectedRow);
                         } catch (SQLException ex) {
                             ex.printStackTrace();
-                            // Show a dialog to the user indicating that there was an error
+                            // Mostramos un diálogo al usuario indicando que hubo un error
                             JOptionPane.showMessageDialog(null, "Error deleting rule: " + ex.getMessage(), "Error",
                                     JOptionPane.ERROR_MESSAGE);
                         }
@@ -148,7 +169,7 @@ public class FirewallGUI {
             }
         });
 
-        // Load rules from database
+        // Cargamos las reglas de la base de datos
         List<FirewallRule> rules = manager.getAllRules();
         for (FirewallRule rule : rules) {
             addRuleToTable(rule);
@@ -156,6 +177,7 @@ public class FirewallGUI {
     }
 
     private void addRuleToTable(FirewallRule rule) {
+        // Añadimos la regla a la tabla
         tableModel.addRow(new Object[] {
                 rule.getName(),
                 rule.getPort(),
