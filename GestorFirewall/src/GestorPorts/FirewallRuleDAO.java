@@ -5,24 +5,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FirewallRuleDAO {
+    // Instancia singleton de la clase DAO
     private static FirewallRuleDAO instance;
+    // Conexión a la base de datos
+
     private Connection connection;
+
+    // Constructor privado para el patrón singleton, establece la conexión a la base
+    // de datos
 
     private FirewallRuleDAO() throws SQLException {
         connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/gestorfirewall", "root", "root");
     }
 
+    // Método para obtener la instancia singleton, si no existe la crea
     public static FirewallRuleDAO getInstance() throws SQLException {
         if (instance == null) {
             instance = new FirewallRuleDAO();
         }
         return instance;
     }
+    // Método para añadir una nueva regla a la base de datos
 
     public void addRule(FirewallRule rule) throws SQLException {
         if (getRule(rule.getName()) != null) {
             throw new SQLException("Una regla con el mismo nombre ya existe.");
         }
+        // Consultas SQL para insertar la regla en la tabla de reglas y en la tabla de
+        // historial
 
         String sql = "INSERT INTO reglas_firewall (nombre, puerto, protocolo, aplicacion, usuario, grupo, direccion_ip, accion, interfaz_red, direccion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String sqlHistory = "INSERT INTO reglas_historial (nombre, puerto, protocolo, aplicacion, usuario, grupo, direccion_ip, accion, interfaz_red, direccion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -68,6 +78,8 @@ public class FirewallRuleDAO {
         }
     }
 
+    // Método para obtener todas las reglas de la base de datos
+
     public List<FirewallRule> getAllRules() {
         List<FirewallRule> rules = new ArrayList<>();
         String sql = "SELECT * FROM reglas_firewall";
@@ -94,6 +106,8 @@ public class FirewallRuleDAO {
 
         return rules;
     }
+
+    // Método para obtener una regla por su nombre de la base de datos
 
     public FirewallRule getRule(String name) {
         FirewallRule rule = null;
@@ -122,6 +136,7 @@ public class FirewallRuleDAO {
         return rule;
     }
 
+    // Método para comprobar si una regla ya existe en la base de datos
     public boolean ruleExists(FirewallRule rule) {
         String sql = "SELECT * FROM reglas_firewall WHERE nombre = ? AND puerto = ? AND protocolo = ? AND aplicacion = ? AND usuario = ? AND grupo = ? AND direccion_ip = ? AND accion = ? AND interfaz_red = ? AND direccion = ?";
 
@@ -145,6 +160,8 @@ public class FirewallRuleDAO {
 
         return false; // Si ocurre una excepción, asumimos que la regla no existe
     }
+
+    // Método para actualizar una regla en la base de datos
 
     public void updateRule(String originalName, FirewallRule rule) {
         String sql = "UPDATE reglas_firewall SET nombre = ?, puerto = ?, protocolo = ?, aplicacion = ?, usuario = ?, grupo = ?, direccion_ip = ?, accion = ?, interfaz_red = ?, direccion = ? WHERE nombre = ?";
@@ -188,6 +205,8 @@ public class FirewallRuleDAO {
         }
 
     }
+
+    // Método para eliminar una regla de la base de datos
 
     public void deleteRule(String ruleName) {
         String deleteSql = "delete from reglas_firewall where nombre = ?";
