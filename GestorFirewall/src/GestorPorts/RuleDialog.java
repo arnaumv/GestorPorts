@@ -112,7 +112,7 @@ public class RuleDialog extends JDialog {
 
                     // Añadir la regla al firewall
                     try {
-                        FirewallManager manager = new FirewallManager();
+                        FirewallManager manager = FirewallManager.getInstance();
                         manager.addRule(rule);
                         ruleSaved = true;
                     } catch (Exception ex) {

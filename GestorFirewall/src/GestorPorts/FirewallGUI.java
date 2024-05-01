@@ -22,7 +22,7 @@ public class FirewallGUI {
     private JFrame frame;
 
     public FirewallGUI() {
-        this.manager = new FirewallManager();
+        this.manager = FirewallManager.getInstance();
         this.tableModel = new DefaultTableModel(new Object[] { "Nom", "Port", "Protocol", "App", "Usuari", "Grup",
                 "IP", "Accio", "Interficie", "Sentit" }, 0);
         this.table = new JTable(tableModel);

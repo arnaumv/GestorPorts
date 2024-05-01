@@ -10,8 +10,9 @@ public class FirewallManager {
     // DAO (Data Access Object) para interactuar con la base de datos de reglas de
     // firewall
     private FirewallRuleDAO dao;
+    private static FirewallManager instance;
 
-    public FirewallManager() {
+    private FirewallManager() {
         try {
             // Intenta obtener una instancia del DAO
             this.dao = FirewallRuleDAO.getInstance();
@@ -19,6 +20,13 @@ public class FirewallManager {
             // Si hay un error al obtener la instancia, imprime el error
             e.printStackTrace();
         }
+    }
+
+    public static FirewallManager getInstance() {
+        if (instance == null) {
+            instance = new FirewallManager();
+        }
+        return instance;
     }
 
     // Método para obtener una regla de firewall por su nombre
