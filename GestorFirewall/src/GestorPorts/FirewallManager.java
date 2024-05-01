@@ -66,7 +66,8 @@ public class FirewallManager {
         if (rule.getApplication() != null && !rule.getApplication().isEmpty()) {
             command.append(" program=").append(rule.getApplication());
         }
-        if (rule.getNetworkInterface() != null && !rule.getNetworkInterface().isEmpty()) {
+        if (rule.getNetworkInterface() != null && !rule.getNetworkInterface().isEmpty()
+                && !rule.getNetworkInterface().equalsIgnoreCase("TODAS")) {
             // Asegúrate de que el valor de la interfaz de red sea "lan", "wireless" o "ras"
             command.append(" interfacetype=").append(rule.getNetworkInterface());
         }

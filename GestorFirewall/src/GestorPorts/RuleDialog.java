@@ -37,7 +37,7 @@ public class RuleDialog extends JDialog {
         grupField = new JTextField();
         ipField = new JTextField();
         accioField = new JComboBox<>(new String[] { "Permetre", "Denegar" });
-        interficieField = new JComboBox<>(new String[] { "LAN", "WIRELESS", "RAS" });
+        interficieField = new JComboBox<>(new String[] { "Totes", "LAN", "WIRELESS", "RAS" });
         sentitField = new JComboBox<>(new String[] { "IN", "OUT" });
         saveButton = new JButton("Guardar");
         cancelButton = new JButton("Cancelar");
