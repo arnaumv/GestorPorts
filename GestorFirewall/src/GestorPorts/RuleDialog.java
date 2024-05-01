@@ -117,7 +117,7 @@ public class RuleDialog extends JDialog {
                         ruleSaved = true;
                     } catch (Exception ex) {
                         // LANZA LOS ERRROES DE PARTE DEL FIREWALL MANAEGER
-                        showErrorDialog("Errorrrr: " + ex.getMessage());
+                        showErrorDialog("Error: " + ex.getMessage());
                         isError = true; // Marcar que hay un error
                         return null;
                     }

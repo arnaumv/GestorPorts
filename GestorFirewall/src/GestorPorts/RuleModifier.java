@@ -86,20 +86,22 @@ public class RuleModifier {
 
     // Método para obtener el ActionListener del botón de guardar
 
+    // Método para obtener el ActionListener del botón de guardar
     public ActionListener getSaveButtonActionListener(JFrame modifyFrame, String originalName,
             DefaultTableModel tableModel, int selectedRow) {
         return new ActionListener() {
             public void actionPerformed(ActionEvent e) {
 
+                // Deshabilita los elementos interactivos durante la ejecución de la tarea
                 setInteractiveElementsEnabled(false);
 
-                // Create a SwingWorker to perform the long-running task
+                // Crea un SwingWorker para realizar la tarea que tarda mucho tiempo
                 SwingWorker<FirewallRule, Void> worker = new SwingWorker<FirewallRule, Void>() {
                     private FirewallRule modifiedRule;
 
                     @Override
                     protected FirewallRule doInBackground() throws Exception {
-                        // Create a new FirewallRule with the modified values
+                        // Crea una nueva regla de Firewall con los valores modificados
                         modifiedRule = new FirewallRule(
                                 getNomFieldText(),
                                 Integer.parseInt(getPortFieldText()),
@@ -118,18 +120,19 @@ public class RuleModifier {
                     @Override
                     protected void done() {
                         try {
-                            // Validate the rule before updating
+                            // Valida la regla antes de actualizarla
                             String validationError = isRuleValid(modifiedRule);
                             if (validationError != null) {
                                 JOptionPane.showMessageDialog(null,
                                         validationError,
                                         "Error",
                                         JOptionPane.ERROR_MESSAGE);
+                                // Habilita los elementos interactivos si hay un error
                                 setInteractiveElementsEnabled(true);
                                 return;
                             }
 
-                            // Check for duplicate rule
+                            // Verifica si la regla es duplicada
                             if (isDuplicateRule(modifiedRule, originalName)) {
                                 JOptionPane.showMessageDialog(null, "Nom de la regla duplicat", "Error",
                                         JOptionPane.ERROR_MESSAGE);
@@ -137,7 +140,7 @@ public class RuleModifier {
                                 return;
                             }
 
-                            // Check if a rule with the new name already exists
+                            // Verifica si ya existe una regla con el nuevo nombre
                             if (!originalName.equals(modifiedRule.getName())
                                     && manager.getRule(modifiedRule.getName()) != null) {
                                 JOptionPane.showMessageDialog(null, "A rule with this name already exists", "Error",
@@ -146,32 +149,32 @@ public class RuleModifier {
                                 return;
                             }
 
-                            // Update the rule in the firewall manager
+                            // Actualiza la regla en el administrador de firewall
                             try {
-                                // Add a delay of 1.5 seconds
+                                // Agrega un retraso de 1.5 segundos
                                 Thread.sleep(1500);
 
                                 manager.updateRule(originalName, modifiedRule);
                                 System.out.println("Rule updated successfully");
-                                // Close the frame after successful update
+                                // Cierra el marco después de la actualización exitosa
                                 modifyFrame.dispose();
                             } catch (IllegalArgumentException ex) {
-                                // Show error message if the update failed
-                                JOptionPane.showMessageDialog(null, ex.getMessage(), "Error",
+                                // Muestra un mensaje de error si la actualización falló
+                                JOptionPane.showMessageDialog(modifyFrame, ex.getMessage(), "Error",
                                         JOptionPane.ERROR_MESSAGE);
                                 setInteractiveElementsEnabled(true);
                             } catch (RuntimeException ex) {
-                                // Show error message if a runtime exception occurred
-                                JOptionPane.showMessageDialog(null, ex.getMessage(), "Error",
+                                // Muestra un mensaje de error si ocurrió una excepción en tiempo de ejecución
+                                JOptionPane.showMessageDialog(modifyFrame, ex.getMessage(), "Error",
                                         JOptionPane.ERROR_MESSAGE);
                                 setInteractiveElementsEnabled(true);
                             } catch (Exception ex) {
-                                // Handle the exception appropriately for your application
+                                // Maneja la excepción de manera apropiada para tu aplicación
                                 System.out.println("Error updating rule: " + ex.getMessage());
                                 setInteractiveElementsEnabled(true);
                             }
 
-                            // Update the table model
+                            // Actualiza el modelo de la tabla
                             List<Object> modifiedRuleList = Arrays.asList(modifiedRule.getName(),
                                     modifiedRule.getPort(),
                                     modifiedRule.getProtocol(), modifiedRule.getApplication(), modifiedRule.getUser(),
@@ -182,7 +185,7 @@ public class RuleModifier {
                                 tableModel.setValueAt(modifiedRuleList.get(i), selectedRow, i);
                             }
                         } catch (NumberFormatException ex) {
-                            // Show custom error message
+                            // Muestra un mensaje de error personalizado
                             JOptionPane.showMessageDialog(null, "El port ha de ser un numero correcte", "Error",
                                     JOptionPane.ERROR_MESSAGE);
                             setInteractiveElementsEnabled(true);
@@ -190,7 +193,7 @@ public class RuleModifier {
                     }
                 };
 
-                // Start the SwingWorker
+                // Inicia el SwingWorker
                 worker.execute();
             }
         };
@@ -272,7 +275,7 @@ public class RuleModifier {
 
         // Check if the IP address is valid, if it is not empty
         if (rule.getIpAddress() != null && !rule.getIpAddress().trim().isEmpty() && !isValidIP(rule.getIpAddress())) {
-            return "La direcció IP no és vàlida.";
+            return "L'adreça IP no és vàlida.";
         }
 
         // Add more validation logic as needed...
@@ -281,6 +284,9 @@ public class RuleModifier {
     }
 
     private boolean isValidIP(String ip) {
+        // Use a regular expression (regex) to check if the IP address is valid
+        String regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+
         // Check if the IP address is a range
         if (ip.contains("-")) {
             String[] parts = ip.split("-");
@@ -288,16 +294,10 @@ public class RuleModifier {
                 return false;
             }
 
-            return isValidSingleIP(parts[0].trim()) && isValidSingleIP(parts[1].trim());
+            return parts[0].trim().matches(regex) && parts[1].trim().matches(regex);
         }
 
         // If it's not a range, check if it's a valid single IP address
-        return isValidSingleIP(ip);
-    }
-
-    private boolean isValidSingleIP(String ip) {
-        // Use a regular expression (regex) to check if the IP address is valid
-        String regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
         return ip.matches(regex);
     }
 

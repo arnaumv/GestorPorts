@@ -31,7 +31,13 @@ public class FirewallManager {
         // Verifica si ya existe una regla con el mismo nombre
         if (dao.getRule(rule.getName()) != null) {
             // Si existe, lanza una excepción
-            throw new IllegalArgumentException("Una regla con el mismo nombre ya existe.");
+            throw new IllegalArgumentException("Una regla amb el mateix nom ja existeix.");
+        }
+
+        // Verifica si se especifican usuario o grupo, y si es así, lanza una excepción
+        if ((rule.getUser() != null && !rule.getUser().isEmpty())
+                || (rule.getGroup() != null && !rule.getGroup().isEmpty())) {
+            throw new IllegalArgumentException("Windows no suporta regles per a grups ni usuaris.");
         }
 
         // Traduce la acción a una acción de netsh
@@ -50,16 +56,9 @@ public class FirewallManager {
 
         System.out.println("Executing command: " + command.toString());
 
-        // Si se especifican usuario, grupo, aplicación o interfaz, los agrega al
-        // comando
+        // Si se especifican aplicación o interfaz, los agrega al comando
         if (rule.getApplication() != null) {
             command.append(" program=").append(rule.getApplication());
-        }
-        if (rule.getUser() != null) {
-            command.append(" user=").append(rule.getUser());
-        }
-        if (rule.getGroup() != null) {
-            command.append(" group=").append(rule.getGroup());
         }
         if (rule.getNetworkInterface() != null) {
             command.append(" interface=").append(rule.getNetworkInterface());
@@ -81,7 +80,7 @@ public class FirewallManager {
                     errorMessage.append(line);
                 }
                 throw new IOException(
-                        "Error executing shell command: " + command + ". Error: " + errorMessage.toString());
+                        "Error executant l'ordre de shell: " + command + ". Error: " + errorMessage.toString());
             }
         } catch (IOException | InterruptedException e) {
             // Si hay un error al ejecutar el comando, imprime el error
@@ -96,12 +95,12 @@ public class FirewallManager {
                     while ((line = reader.readLine()) != null) {
                         errorMessage.append(line);
                     }
-                    System.out.println("Error details: " + errorMessage.toString());
+                    System.out.println("Detalls de l'error: " + errorMessage.toString());
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
             }
-            throw new RuntimeException("Error adding firewall rule: " + rule.getName(), e);
+            throw new RuntimeException("Error afegint la regla de firewall: " + rule.getName(), e);
         } finally {
             // Cierra el lector en el bloque finally para asegurarse de que se cierre,
             // ocurra una excepción o no
@@ -120,11 +119,11 @@ public class FirewallManager {
             dao.addRule(rule);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            throw new RuntimeException("Error adding rule to database: " + rule.getName(), e);
+            throw new RuntimeException("Error afegint la regla a la base de dades: " + rule.getName(), e);
         }
-
     }
 
+    // Método para actualizar una regla de firewall
     public void updateRule(String originalName, FirewallRule rule) throws IllegalArgumentException {
         // Verifica si existe una regla con el nombre original
         FirewallRule existingRule = dao.getRule(originalName);
@@ -139,6 +138,12 @@ public class FirewallManager {
                 // Si es un duplicado, lanza una excepción
                 throw new IllegalArgumentException("La regla ya existe.");
             }
+        }
+
+        // Verifica si se especifican usuario o grupo, y si es así, lanza una excepción
+        if ((rule.getUser() != null && !rule.getUser().isEmpty())
+                || (rule.getGroup() != null && !rule.getGroup().isEmpty())) {
+            throw new IllegalArgumentException("Windows no soporta reglas para grupos ni usaurios.");
         }
 
         // Traduce la acción a una acción de netsh
@@ -157,16 +162,9 @@ public class FirewallManager {
 
         System.out.println("Executing command: " + command.toString());
 
-        // Si se especifican usuario, grupo, aplicación o interfaz, los agrega al
-        // comando
+        // Si se especifican aplicación o interfaz, los agrega al comando
         if (rule.getApplication() != null) {
             command.append(" program=").append(rule.getApplication());
-        }
-        if (rule.getUser() != null) {
-            command.append(" user=").append(rule.getUser());
-        }
-        if (rule.getGroup() != null) {
-            command.append(" group=").append(rule.getGroup());
         }
         if (rule.getNetworkInterface() != null) {
             command.append(" interface=").append(rule.getNetworkInterface());
@@ -180,7 +178,7 @@ public class FirewallManager {
             process.waitFor(); // Espera a que se complete el comando
         } catch (IOException | InterruptedException e) {
             System.out.println(e.getMessage());
-            throw new RuntimeException("Error executing command: " + command, e);
+            throw new RuntimeException("Error executing command to update firewall rule: " + command, e);
         }
 
         // Construye el comando de firewall para renombrar la regla
@@ -195,7 +193,7 @@ public class FirewallManager {
             process.waitFor(); // Espera a que se complete el comando
         } catch (IOException | InterruptedException e) {
             System.out.println(e.getMessage());
-            throw new RuntimeException("Error executing command: " + command, e);
+            throw new RuntimeException("Error executing command to rename firewall rule: " + command, e);
         }
 
         // Agrega el código para actualizar la regla en la base de datos
@@ -203,7 +201,7 @@ public class FirewallManager {
             dao.updateRule(originalName, rule);
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            throw new RuntimeException("Error updating rule in database: " + rule.getName(), e);
+            throw new RuntimeException("Error updating firewall rule in database: " + rule.getName(), e);
         }
     }
 
