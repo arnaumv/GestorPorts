@@ -166,6 +166,27 @@ public class FirewallRuleDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        // Insertar la regla actualizada en la tabla "reglas_historial"
+        sql = "INSERT INTO reglas_historial (nombre, puerto, protocolo, aplicacion, usuario, grupo, direccion_ip, accion, interfaz_red, direccion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, rule.getName());
+            statement.setInt(2, rule.getPort());
+            statement.setString(3, rule.getProtocol());
+            statement.setString(4, rule.getApplication());
+            statement.setString(5, rule.getUser());
+            statement.setString(6, rule.getGroup());
+            statement.setString(7, rule.getIpAddress());
+            statement.setString(8, rule.getAction());
+            statement.setString(9, rule.getNetworkInterface());
+            statement.setString(10, rule.getDirection());
+
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void deleteRule(String ruleName) {

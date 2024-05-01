@@ -72,7 +72,7 @@ public class RuleModifier {
         modifyPanel.add(new JLabel("Acció:"));
         modifyPanel.add(accioField);
 
-        interficieField = new JComboBox<String>(new String[] { "TODAS", "LAN", "WIRELESS", "RAS" });
+        interficieField = new JComboBox<String>(new String[] { "Totes", "LAN", "WIRELESS", "RAS" });
         interficieField.setSelectedItem((String) selectedRule.get(8));
         modifyPanel.add(new JLabel("Interfície:"));
         modifyPanel.add(interficieField);

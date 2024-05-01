@@ -7,7 +7,7 @@ public class DeleteRuleDialog extends JDialog {
     private int userOption;
 
     public DeleteRuleDialog(Frame parent, String ruleInfo) {
-        super(parent, "Confirmar eliminación", true);
+        super(parent, "Confirmar eliminació", true);
 
         JPanel panel = new JPanel(new BorderLayout());
 
