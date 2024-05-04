@@ -15,7 +15,7 @@ public class FirewallRuleDAO {
     // de datos
 
     private FirewallRuleDAO() throws SQLException {
-        connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/gestorfirewall", "root", "root");
+        connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/gestorfirewall", "user777", "");
     }
 
     // Método para obtener la instancia singleton, si no existe la crea
@@ -175,7 +175,6 @@ public class FirewallRuleDAO {
             statement.setString(6, rule.getGroup());
             statement.setString(7, rule.getIpAddress());
             statement.setString(8, rule.getAction());
-            statement.setString(9, rule.getNetworkInterface());
             statement.setString(10, rule.getDirection());
             statement.setString(11, originalName);
 
@@ -226,6 +225,32 @@ public class FirewallRuleDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+    
+    public List<FirewallRule> getHistoryRules() {
+        List<FirewallRule> rules = new ArrayList<>();
+        String sql = "SELECT * FROM reglas_historial";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                FirewallRule rule = new FirewallRule(
+                        rs.getString("nombre"),
+                        rs.getInt("puerto"),
+                        rs.getString("protocolo"),
+                        rs.getString("aplicacion"),
+                        rs.getString("usuario"),
+                        rs.getString("grupo"),
+                        rs.getString("direccion_ip"),
+                        rs.getString("accion"),
+                        rs.getString("interfaz_red"),
+                        rs.getString("direccion"));
+                rules.add(rule);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+		return rules;
     }
 
     // other methods to update and retrieve rules

@@ -169,6 +169,15 @@ public class FirewallGUI {
             }
         });
 
+        // Añadimos un listener al botón de historial para abrir el historial
+        historyButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                FirewallHistory firewallHistory = new FirewallHistory(manager);
+                firewallHistory.setVisible(true);
+            }
+        });
+        
         // Cargamos las reglas de la base de datos
         List<FirewallRule> rules = manager.getAllRules();
         for (FirewallRule rule : rules) {
