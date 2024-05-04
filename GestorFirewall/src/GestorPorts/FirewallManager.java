@@ -277,4 +277,9 @@ public class FirewallManager {
         return dao.getAllRules();
     }
 
+    public List<FirewallHistoryRule> getHistoryRules() {
+        // Devuelve todas las reglas de la base de datos
+        return dao.getHistoryRules();
+    }
+
 }
