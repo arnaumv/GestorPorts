@@ -177,7 +177,7 @@ public class FirewallGUI {
                 firewallHistory.setVisible(true);
             }
         });
-        
+
         // Cargamos las reglas de la base de datos
         List<FirewallRule> rules = manager.getAllRules();
         for (FirewallRule rule : rules) {
