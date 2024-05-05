@@ -1,5 +1,5 @@
 package GestorPorts;
-
+	
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -58,10 +58,52 @@ public class FirewallHistory extends JFrame {
         scrollPane = new JScrollPane();
         panel.add(scrollPane, BorderLayout.CENTER);
         
+        recoveryRule = new JButton("Recuperar regla");
+        recoveryRule.addActionListener(e -> {
+            // Obtener el índice seleccionado en la lista
+            int selectedIndex = table.getSelectedRow();
+            
+            System.out.println(selectedIndex);
+            if (selectedIndex != -1) {
+
+                
+                // Obtener el nombre de la regla seleccionada
+                String ruleName = (String) tableModelHistory.getValueAt(selectedIndex, 0);
+                System.out.println(ruleName);
+                manager.recoverRule(ruleName);
+
+                // verificar  que la data de finalització de la regla estigui buida
+                if (tableModelHistory.getValueAt(selectedIndex, 11).equals("")) {
+                    JOptionPane.showMessageDialog(this, "La regla ja està activa", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                } else {
+                    // Añadir la regla recuperada a la base de datos
+                    FirewallRule rule = manager.getHistoryRule(ruleName);
+                    manager.addHistoryRuleToActiveRules(rule);
+
+                    // Modificar la tabla para que cambie la fecha de fin de la regla a "Regla activa"
+                    tableModelHistory.setValueAt("", selectedIndex, 11);
+                    
+                    JOptionPane.showMessageDialog(this, "Regla recuperada amb éxit", "Éxit", JOptionPane.INFORMATION_MESSAGE);
+                }
+
+
+            }
+        });
+        panel.add(recoveryRule, BorderLayout.SOUTH);
+
 
         // Crear un JTable para mostrar las reglas del Firewall
         table = new JTable();
         scrollPane.setViewportView(table);
+        
+        recoveryRule.setEnabled(false);
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedIndex = table.getSelectedRow();
+                recoveryRule.setEnabled(selectedIndex != -1);
+            }
+        });
         
         // Crear un DefaultTableModel para la tabla
         tableModelHistory = new DefaultTableModel(new Object[] { "Nom", "Port", "Protocol", "App", "Usuari", "Grup",
@@ -79,10 +121,10 @@ public class FirewallHistory extends JFrame {
 
     }
 
-	private void addRuleToTable(FirewallHistoryRule rule) {  	
+    private void addRuleToTable(FirewallHistoryRule rule) {  	
         String endDate = rule.getEndDate();
         if (endDate == null) {
-            endDate = "Regla activa";
+            endDate = "";
         }
         tableModelHistory.addRow(new Object[] {
                 rule.getName(),

@@ -227,14 +227,28 @@ public class FirewallRuleDAO {
         }
     }
     
-    public List<FirewallRule> getHistoryRules() {
-        List<FirewallRule> rules = new ArrayList<>();
-        String sql = "SELECT * FROM reglas_historial";
+    // Método para recuperar una regla eliminada de la base de datos
+    public void recoverRule(String ruleName) {
+        String updateSql = "update reglas_historial set fecha_borrada = null where nombre = ?";
+
+        try (PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
+            updateStatement.setString(1, ruleName);
+            updateStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+    
+    public FirewallRule getHistoryRule(String name) {
+        FirewallRule rule = null;
+        String sql = "SELECT * FROM reglas_historial WHERE nombre = ?";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, name);
             ResultSet rs = statement.executeQuery();
-            while (rs.next()) {
-                FirewallRule rule = new FirewallRule(
+            if (rs.next()) {
+                rule = new FirewallRule(
                         rs.getString("nombre"),
                         rs.getInt("puerto"),
                         rs.getString("protocolo"),
@@ -245,13 +259,73 @@ public class FirewallRuleDAO {
                         rs.getString("accion"),
                         rs.getString("interfaz_red"),
                         rs.getString("direccion"));
-                rules.add(rule);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-		return rules;
+
+        return rule;
     }
+    
+    public List<FirewallHistoryRule> getHistoryRules() {
+        List<FirewallHistoryRule> rulesHistory = new ArrayList<>();
+        String sql = "SELECT * FROM reglas_historial";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+            	FirewallHistoryRule rule = new FirewallHistoryRule(
+                        rs.getString("nombre"),
+                        rs.getInt("puerto"),
+                        rs.getString("protocolo"),
+                        rs.getString("aplicacion"),
+                        rs.getString("usuario"),
+                        rs.getString("grupo"),
+                        rs.getString("direccion_ip"),
+                        rs.getString("accion"),
+                        rs.getString("interfaz_red"),
+                        rs.getString("direccion"),
+                		rs.getString("fecha_creacion"),
+                		rs.getString("fecha_borrada"));
+            	rulesHistory.add(rule);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+		return rulesHistory;
+    }
+    
+    public void addHistoryRuleToActiveRules(FirewallRule rule) throws SQLException {
+        if (getRule(rule.getName()) != null) {
+            throw new SQLException("Una regla con el mismo nombre ya existe.");
+        }
+        // Consultas SQL para insertar la regla en la tabla de reglas y en la tabla de
+        // historial
+
+        String sql = "INSERT INTO reglas_firewall (nombre, puerto, protocolo, aplicacion, usuario, grupo, direccion_ip, accion, interfaz_red, direccion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, rule.getName());
+            statement.setInt(2, rule.getPort());
+            statement.setString(3, rule.getProtocol());
+            statement.setString(4, rule.getApplication());
+            statement.setString(5, rule.getUser());
+            statement.setString(6, rule.getGroup());
+            statement.setString(7, rule.getIpAddress());
+            statement.setString(8, rule.getAction());
+            statement.setString(9, rule.getNetworkInterface());
+            statement.setString(10, rule.getDirection());
+            statement.setTimestamp(11, new Timestamp(System.currentTimeMillis()));
+
+            int affectedRows = statement.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new SQLException("Creating rule failed, no rows affected.");
+            }
+        }
+    }
+
+
 
     // other methods to update and retrieve rules
 }
