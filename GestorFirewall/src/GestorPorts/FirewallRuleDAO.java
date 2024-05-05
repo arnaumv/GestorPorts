@@ -15,7 +15,7 @@ public class FirewallRuleDAO {
     // de datos
 
     private FirewallRuleDAO() throws SQLException {
-        connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/gestorfirewall", "user777", "");
+        connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/gestorfirewall", "root", "root");
     }
 
     // Método para obtener la instancia singleton, si no existe la crea
@@ -226,7 +226,7 @@ public class FirewallRuleDAO {
             e.printStackTrace();
         }
     }
-    
+
     // Método para recuperar una regla eliminada de la base de datos
     public void recoverRule(String ruleName) {
         String updateSql = "update reglas_historial set fecha_borrada = null where nombre = ?";
@@ -239,7 +239,7 @@ public class FirewallRuleDAO {
         }
 
     }
-    
+
     public FirewallRule getHistoryRule(String name) {
         FirewallRule rule = null;
         String sql = "SELECT * FROM reglas_historial WHERE nombre = ?";
@@ -266,7 +266,7 @@ public class FirewallRuleDAO {
 
         return rule;
     }
-    
+
     public List<FirewallHistoryRule> getHistoryRules() {
         List<FirewallHistoryRule> rulesHistory = new ArrayList<>();
         String sql = "SELECT * FROM reglas_historial";
@@ -274,7 +274,7 @@ public class FirewallRuleDAO {
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
-            	FirewallHistoryRule rule = new FirewallHistoryRule(
+                FirewallHistoryRule rule = new FirewallHistoryRule(
                         rs.getString("nombre"),
                         rs.getInt("puerto"),
                         rs.getString("protocolo"),
@@ -285,16 +285,16 @@ public class FirewallRuleDAO {
                         rs.getString("accion"),
                         rs.getString("interfaz_red"),
                         rs.getString("direccion"),
-                		rs.getString("fecha_creacion"),
-                		rs.getString("fecha_borrada"));
-            	rulesHistory.add(rule);
+                        rs.getString("fecha_creacion"),
+                        rs.getString("fecha_borrada"));
+                rulesHistory.add(rule);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-		return rulesHistory;
+        return rulesHistory;
     }
-    
+
     public void addHistoryRuleToActiveRules(FirewallRule rule) throws SQLException {
         if (getRule(rule.getName()) != null) {
             throw new SQLException("Una regla con el mismo nombre ya existe.");
@@ -324,8 +324,6 @@ public class FirewallRuleDAO {
             }
         }
     }
-
-
 
     // other methods to update and retrieve rules
 }
