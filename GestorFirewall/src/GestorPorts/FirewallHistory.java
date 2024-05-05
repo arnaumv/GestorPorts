@@ -1,5 +1,5 @@
 package GestorPorts;
-	
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -14,7 +14,7 @@ public class FirewallHistory extends JFrame {
     private JScrollPane scrollPane;
     private JPanel panel;
     private JButton recoveryRule, btnBack;
-    
+
     public FirewallHistory(FirewallManager manager) {
         this.manager = manager; // Inicializamos manager
 
@@ -23,19 +23,15 @@ public class FirewallHistory extends JFrame {
         setSize(900, 300);
         setLocationRelativeTo(null);
 
-        
-
         // Crear un panel
         panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Añadir márgenes de 20px
         add(panel);
 
-
         // Crear un JLabel para el título "Historial de reglas"
         JPanel northPanel = new JPanel(new BorderLayout());
         northPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0)); // Margen inferior de 10px
-
 
         JLabel titleLabel = new JLabel("Històric de regles:");
         northPanel.add(titleLabel, BorderLayout.WEST);
@@ -44,7 +40,26 @@ public class FirewallHistory extends JFrame {
         btnBack = new JButton("Regles actives");
         btnBack.addActionListener(e -> {
             // Cerrar la ventana actual
-            panel.setVisible(false);
+            String currentText = btnBack.getText();
+            if (currentText.equals("Regles actives")) {
+                btnBack.setText("Totes les regles");
+                // Mostrar solo las reglas activas del historial
+                tableModelHistory.setRowCount(0);
+                List<FirewallHistoryRule> rules = manager.getHistoryRules();
+                for (FirewallHistoryRule rule : rules) {
+                    if (rule.getEndDate() == null) {
+                        addRuleToTable(rule);
+                    }
+                }
+            } else {
+                btnBack.setText("Regles actives");
+                // Mostrar solo las reglas activas del historial
+                tableModelHistory.setRowCount(0);
+                List<FirewallHistoryRule> rules = manager.getHistoryRules();
+                for (FirewallHistoryRule rule : rules) {
+                    addRuleToTable(rule);
+                }
+            }
         });
         northPanel.add(btnBack, BorderLayout.EAST);
 
@@ -53,26 +68,24 @@ public class FirewallHistory extends JFrame {
         ruleList = new JList<>();
         panel.add(ruleList, BorderLayout.WEST);
 
-
         // Crear un JScrollPane para mostrar las reglas del Firewall
         scrollPane = new JScrollPane();
         panel.add(scrollPane, BorderLayout.CENTER);
-        
+
         recoveryRule = new JButton("Recuperar regla");
         recoveryRule.addActionListener(e -> {
             // Obtener el índice seleccionado en la lista
             int selectedIndex = table.getSelectedRow();
-            
+
             System.out.println(selectedIndex);
             if (selectedIndex != -1) {
 
-                
                 // Obtener el nombre de la regla seleccionada
                 String ruleName = (String) tableModelHistory.getValueAt(selectedIndex, 0);
                 System.out.println(ruleName);
                 manager.recoverRule(ruleName);
 
-                // verificar  que la data de finalització de la regla estigui buida
+                // verificar que la data de finalització de la regla estigui buida
                 if (tableModelHistory.getValueAt(selectedIndex, 11).equals("")) {
                     JOptionPane.showMessageDialog(this, "La regla ja està activa", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
@@ -81,22 +94,22 @@ public class FirewallHistory extends JFrame {
                     FirewallRule rule = manager.getHistoryRule(ruleName);
                     manager.addHistoryRuleToActiveRules(rule);
 
-                    // Modificar la tabla para que cambie la fecha de fin de la regla a "Regla activa"
+                    // Modificar la tabla para que cambie la fecha de fin de la regla a "Regla
+                    // activa"
                     tableModelHistory.setValueAt("", selectedIndex, 11);
-                    
-                    JOptionPane.showMessageDialog(this, "Regla recuperada amb éxit", "Éxit", JOptionPane.INFORMATION_MESSAGE);
-                }
 
+                    JOptionPane.showMessageDialog(this, "Regla recuperada amb éxit", "Éxit",
+                            JOptionPane.INFORMATION_MESSAGE);
+                }
 
             }
         });
         panel.add(recoveryRule, BorderLayout.SOUTH);
 
-
         // Crear un JTable para mostrar las reglas del Firewall
         table = new JTable();
         scrollPane.setViewportView(table);
-        
+
         recoveryRule.setEnabled(false);
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -104,7 +117,7 @@ public class FirewallHistory extends JFrame {
                 recoveryRule.setEnabled(selectedIndex != -1);
             }
         });
-        
+
         // Crear un DefaultTableModel para la tabla
         tableModelHistory = new DefaultTableModel(new Object[] { "Nom", "Port", "Protocol", "App", "Usuari", "Grup",
                 "IP", "Accio", "Interficie", "Sentit", "Data inici", "Data final" }, 0);
@@ -121,7 +134,7 @@ public class FirewallHistory extends JFrame {
 
     }
 
-    private void addRuleToTable(FirewallHistoryRule rule) {  	
+    private void addRuleToTable(FirewallHistoryRule rule) {
         String endDate = rule.getEndDate();
         if (endDate == null) {
             endDate = "";
@@ -141,13 +154,12 @@ public class FirewallHistory extends JFrame {
                 endDate
         });
 
-
     }
-    
+
     public static void main(String[] args) {
         // Crear una instancia de FirewallManager
         FirewallManager manager = FirewallManager.getInstance();
-        
+
         SwingUtilities.invokeLater(() -> {
             // Pasar la instancia de FirewallManager al constructor de FirewallHistory
             FirewallHistory firewallHistory = new FirewallHistory(manager);
