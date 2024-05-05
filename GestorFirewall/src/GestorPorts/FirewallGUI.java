@@ -173,8 +173,8 @@ public class FirewallGUI {
         historyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                FirewallHistory firewallHistory = new FirewallHistory(manager);
-                firewallHistory.setVisible(true);
+                FirewallHistory history = new FirewallHistory(manager, FirewallGUI.this);
+                history.setVisible(true);
             }
         });
 
@@ -185,7 +185,7 @@ public class FirewallGUI {
         }
     }
 
-    private void addRuleToTable(FirewallRule rule) {
+    public void addRuleToTable(FirewallRule rule) {
         // Añadimos la regla a la tabla
         tableModel.addRow(new Object[] {
                 rule.getName(),
