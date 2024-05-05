@@ -8,6 +8,7 @@ import java.util.List;
 
 public class FirewallHistory extends JFrame {
     private FirewallManager manager;
+    private FirewallGUI gui;
     private JList<String> ruleList;
     private DefaultTableModel tableModelHistory;
     private JTable table;
@@ -15,8 +16,9 @@ public class FirewallHistory extends JFrame {
     private JPanel panel;
     private JButton recoveryRule, btnBack;
 
-    public FirewallHistory(FirewallManager manager) {
-        this.manager = manager; // Inicializamos manager
+    public FirewallHistory(FirewallManager manager, FirewallGUI gui) {
+        this.manager = manager;
+        this.gui = gui;
 
         setTitle("Firewall History");
         setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
@@ -94,6 +96,9 @@ public class FirewallHistory extends JFrame {
                     FirewallRule rule = manager.getHistoryRule(ruleName);
                     manager.addHistoryRuleToActiveRules(rule);
 
+                    // Añadir la regla a la tabla de FirewallGUI
+                    gui.addRuleToTable(rule);
+
                     // Modificar la tabla para que cambie la fecha de fin de la regla a "Regla
                     // activa"
                     tableModelHistory.setValueAt("", selectedIndex, 11);
@@ -156,14 +161,4 @@ public class FirewallHistory extends JFrame {
 
     }
 
-    public static void main(String[] args) {
-        // Crear una instancia de FirewallManager
-        FirewallManager manager = FirewallManager.getInstance();
-
-        SwingUtilities.invokeLater(() -> {
-            // Pasar la instancia de FirewallManager al constructor de FirewallHistory
-            FirewallHistory firewallHistory = new FirewallHistory(manager);
-            firewallHistory.setVisible(true);
-        });
-    }
 }
