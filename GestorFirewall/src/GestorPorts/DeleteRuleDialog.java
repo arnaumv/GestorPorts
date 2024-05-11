@@ -1,3 +1,4 @@
+
 package GestorPorts;
 
 import javax.swing.*;
@@ -20,6 +21,8 @@ public class DeleteRuleDialog extends JDialog {
         panel.add(infoPanel, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0)); // Establecer márgenes
+
         JButton deleteButton = new JButton("Esborrar");
         JButton cancelButton = new JButton("Cancelar");
 
@@ -36,9 +39,12 @@ public class DeleteRuleDialog extends JDialog {
         buttonPanel.add(deleteButton);
         buttonPanel.add(cancelButton);
         panel.add(buttonPanel, BorderLayout.PAGE_END);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Establecer márgenes
+
 
         getContentPane().add(panel);
         pack();
+        setLocationRelativeTo(null);
     }
 
     public int getUserOption() {
