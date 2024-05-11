@@ -1,6 +1,6 @@
 # Gestor Ports per a Windows
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000)
+![Versió](https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000)
 
 
 > GestorPorts és una aplicació per gestionar els ports de firewall.
