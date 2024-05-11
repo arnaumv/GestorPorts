@@ -271,11 +271,11 @@ public class FirewallManager {
             }
         }
     }
-
+    
     public void recoverRule(String ruleName) {
-        dao.recoverRule(ruleName);
+      dao.recoverRule(ruleName);
     }
-
+    
     public void addHistoryRuleToActiveRules(FirewallRule rule) throws IllegalArgumentException {
         // Verifica si ya existe una regla con el mismo nombre
         if (dao.getRule(rule.getName()) != null) {
@@ -374,12 +374,14 @@ public class FirewallManager {
         }
     }
 
+
+    
     public FirewallRule getHistoryRule(String ruleName) {
         // Devuelve la regla de la base de datos
-        System.out.println(dao.getHistoryRule(ruleName));
+    	System.out.println(dao.getHistoryRule(ruleName));
         return dao.getHistoryRule(ruleName);
     }
-
+    
     public List<FirewallRule> getAllRules() {
         // Devuelve todas las reglas de la base de datos
         return dao.getAllRules();

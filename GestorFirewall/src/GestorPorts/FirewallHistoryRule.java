@@ -1,7 +1,7 @@
 package GestorPorts;
 
 public class FirewallHistoryRule {
-    private String name;
+	private String name;
     private int port;
     private String protocol;
     private String application;
@@ -16,8 +16,7 @@ public class FirewallHistoryRule {
 
     // Constructor
     public FirewallHistoryRule(String nombre, int puerto, String protocolo, String aplicacion, String usuario,
-            String grupo, String direccion_ip, String accion, String interfaz_red, String direccion,
-            String fecha_creacion, String fecha_borrada) {
+            String grupo, String direccion_ip, String accion, String interfaz_red, String direccion, String fecha_creacion, String fecha_borrada) {
         this.name = nombre;
         this.port = puerto;
         this.protocol = protocolo;
@@ -112,19 +111,19 @@ public class FirewallHistoryRule {
         this.direction = direction;
     }
 
-    public String getCreatedDate() {
-        return createdDate;
-    }
+	public String getCreatedDate() {
+		return createdDate;
+	}
 
-    public void setCreatedDate(String createdDate) {
-        this.createdDate = createdDate;
-    }
+	public void setCreatedDate(String createdDate) {
+		this.createdDate = createdDate;
+	}
 
-    public String getEndDate() {
-        return endDate;
-    }
+	public String getEndDate() {
+		return endDate;
+	}
 
-    public void setEndDate(String endDate) {
-        this.endDate = endDate;
-    }
+	public void setEndDate(String endDate) {
+		this.endDate = endDate;
+	}
 }

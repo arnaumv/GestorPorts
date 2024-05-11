@@ -32,6 +32,7 @@ public class FirewallGUI {
         // Creamos la tabla con el modelo definido
         this.table = new JTable(tableModel);
 
+
         // Creamos los botones y los nombramos
         this.modifyButton = new JButton("Modificar");
         this.deleteButton = new JButton("Esborrar");
@@ -89,6 +90,7 @@ public class FirewallGUI {
 
                     // Establecemos el tamaño preferido del panel
                     modifyPanel.setPreferredSize(new Dimension(400, 400));
+                    
 
                     // Declaramos el marco de la ventana aquí
                     JFrame modifyFrame = new JFrame("Modificar Regla");
@@ -122,6 +124,7 @@ public class FirewallGUI {
 
                     modifyFrame.setContentPane(modifyPanel);
                     modifyFrame.pack();
+                    modifyFrame.setLocationRelativeTo(null);
                     modifyFrame.setVisible(true);
                 }
             }
@@ -204,9 +207,12 @@ public class FirewallGUI {
     public void start() {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
+        frame.setSize(1200, 500);
 
-        JLabel rulesLabel = new JLabel("  Regles: ");
+
+        JLabel rulesLabel = new JLabel("Regles: ");
         JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Añadir márgenes de 20px
         topPanel.add(rulesLabel, BorderLayout.WEST);
         topPanel.add(historyButton, BorderLayout.EAST);
 
@@ -220,13 +226,23 @@ public class FirewallGUI {
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(bottomLeftPanel, BorderLayout.WEST);
         bottomPanel.add(bottomRightPanel, BorderLayout.EAST);
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20)); // Añadir márgenes de 20px
+
 
         // Add components to frame
         frame.add(topPanel, BorderLayout.NORTH);
-        frame.add(new JScrollPane(table), BorderLayout.CENTER);
+        frame.add(new JScrollPane(table) {
+            @Override
+            public Insets getInsets() {
+                return new Insets(20, 20, 20, 20); // Márgenes de 20 píxeles en cada lado
+            }
+        }, BorderLayout.CENTER);
+        // Centrar la ventana en la pantalla después de empaquetar los componentes
         frame.add(bottomPanel, BorderLayout.SOUTH);
+        frame.setLocationRelativeTo(null);
 
-        frame.pack();
         frame.setVisible(true);
     }
+
+
 }

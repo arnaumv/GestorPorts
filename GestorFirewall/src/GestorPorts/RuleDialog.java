@@ -23,7 +23,8 @@ public class RuleDialog extends JDialog {
     private JComboBox<String> sentitField;
     private JButton saveButton;
     private JButton cancelButton;
-    private JLabel loadingIndicator;
+
+
 
     public RuleDialog(Frame owner) {
         super(owner, "Nova Regla", true);
@@ -42,9 +43,19 @@ public class RuleDialog extends JDialog {
         saveButton = new JButton("Guardar");
         cancelButton = new JButton("Cancelar");
 
-        // Inicialización del indicador de carga
-        loadingIndicator = new JLabel("Cargando...");
-        loadingIndicator.setVisible(false);
+        // Vetana de carga para la interfaz de usuario ;
+        JDialog loadingDialog = new JDialog(this, "Guardant regla...", false);
+        loadingDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        loadingDialog.setSize(300, 100);
+        loadingDialog.setLocationRelativeTo(this);
+        loadingDialog.setLayout(new FlowLayout(FlowLayout.CENTER));
+        JProgressBar progressBar = new JProgressBar();
+        progressBar.setIndeterminate(true);
+        loadingDialog.add(progressBar);
+        loadingDialog.pack();
+        loadingDialog.setResizable(false);
+       
+        
 
         // Acción del botón de guardar
         saveButton.addActionListener(e -> {
@@ -52,7 +63,8 @@ public class RuleDialog extends JDialog {
             setInteractiveElementsEnabled(false);
 
             // Mostrar indicador de carga
-            showLoadingIndicator();
+            loadingDialog.setVisible(true);
+            
 
             // Crear un SwingWorker para realizar la tarea de larga duración
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
@@ -128,8 +140,8 @@ public class RuleDialog extends JDialog {
                 @Override
                 protected void done() {
                     // Ocultar indicador de carga
-                    hideLoadingIndicator();
-
+                    loadingDialog.setVisible(false);
+                    
                     // Habilitar elementos interactivos
                     setInteractiveElementsEnabled(true);
 
@@ -175,34 +187,43 @@ public class RuleDialog extends JDialog {
 
         // Configuración del layout y adición de los componentes a la interfaz de
         // usuario
-        setLayout(new GridLayout(13, 2));
-        add(new JLabel("Nom: "));
-        add(nomField);
-        add(new JLabel("Port: "));
-        add(portField);
-        add(new JLabel("Protocol: "));
-        add(protocolField);
-        add(new JLabel("App: "));
-        add(appField);
-        add(new JLabel("Usuari: "));
-        add(usuariField);
-        add(new JLabel("Grup: "));
-        add(grupField);
-        add(new JLabel("IP: "));
-        add(ipField);
-        add(new JLabel("Accio: "));
-        add(accioField);
-        add(new JLabel("Interficie: "));
-        add(interficieField);
-        add(new JLabel("Sentit: "));
-        add(sentitField);
+        
+        setLayout(new BorderLayout()); // Establecer el BorderLayout para el diálogo
+
+        
+        JPanel fieldsPanel = new JPanel(new GridLayout(13, 2));
+        fieldsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Establecer márgenes
+
+        fieldsPanel.add(new JLabel("Nom: "));
+        fieldsPanel.add(nomField);
+        fieldsPanel.add(new JLabel("Port: "));
+        fieldsPanel.add(portField);
+        fieldsPanel.add(new JLabel("Protocol: "));
+        fieldsPanel.add(protocolField);
+        fieldsPanel.add(new JLabel("App: "));
+        fieldsPanel.add(appField);
+        fieldsPanel.add(new JLabel("Usuari: "));
+        fieldsPanel.add(usuariField);
+        fieldsPanel.add(new JLabel("Grup: "));
+        fieldsPanel.add(grupField);
+        fieldsPanel.add(new JLabel("IP: "));
+        fieldsPanel.add(ipField);
+        fieldsPanel.add(new JLabel("Accio: "));
+        fieldsPanel.add(accioField);
+        fieldsPanel.add(new JLabel("Interficie: "));
+        fieldsPanel.add(interficieField);
+        fieldsPanel.add(new JLabel("Sentit: "));
+        fieldsPanel.add(sentitField);
+        add(fieldsPanel, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10)); // Establecer márgenes
         buttonPanel.add(saveButton);
         buttonPanel.add(cancelButton);
-        add(buttonPanel);
+        add(buttonPanel, BorderLayout.SOUTH);
 
-        pack();
+        setSize(400, 400);
+        setLocationRelativeTo(null);
     }
 
     // Métodos getter para la regla y el estado de guardado de la regla
@@ -229,14 +250,6 @@ public class RuleDialog extends JDialog {
         sentitField.setEnabled(enabled);
         saveButton.setEnabled(enabled);
         cancelButton.setEnabled(enabled);
-    }
-
-    private void showLoadingIndicator() {
-        loadingIndicator.setVisible(true);
-    }
-
-    private void hideLoadingIndicator() {
-        loadingIndicator.setVisible(false);
     }
 
     // Método para validar la regla de firewall

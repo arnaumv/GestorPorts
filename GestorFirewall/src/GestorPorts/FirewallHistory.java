@@ -73,6 +73,22 @@ public class FirewallHistory extends JFrame {
         // Crear un JScrollPane para mostrar las reglas del Firewall
         scrollPane = new JScrollPane();
         panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Vetana de carga para la interfaz de usuario ;
+        JDialog loadingDialog = new JDialog(this, "Recuperant regla...", false);
+        loadingDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        loadingDialog.setSize(300, 100);
+        loadingDialog.setLocationRelativeTo(this);
+        loadingDialog.setLayout(new FlowLayout(FlowLayout.CENTER));
+        JProgressBar progressBar = new JProgressBar();
+        progressBar.setIndeterminate(true);
+        JPanel panelProgressBar = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panelProgressBar.add(progressBar);
+        
+        // Añadir el panel que contiene el progressBar al loadingDialog
+        loadingDialog.add(panelProgressBar);
+        loadingDialog.pack();
+        loadingDialog.setResizable(false);
 
         recoveryRule = new JButton("Recuperar regla");
         recoveryRule.addActionListener(e -> {
@@ -92,19 +108,30 @@ public class FirewallHistory extends JFrame {
                     JOptionPane.showMessageDialog(this, "La regla ja està activa", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 } else {
-                    // Añadir la regla recuperada a la base de datos
-                    FirewallRule rule = manager.getHistoryRule(ruleName);
-                    manager.addHistoryRuleToActiveRules(rule);
+                	loadingDialog.setVisible(true);
+                	SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                	    @Override
+                	    protected Void doInBackground() throws Exception {
+                	        try {
+                	            Thread.sleep(1500);
+                	            FirewallRule rule = manager.getHistoryRule(ruleName);
+                	            manager.addHistoryRuleToActiveRules(rule);
+                	            gui.addRuleToTable(rule);
+                	            tableModelHistory.setValueAt("", selectedIndex, 11);
+                	        } catch (InterruptedException e1) {
+                	            JOptionPane.showMessageDialog(FirewallHistory.this, "Ha ocurrido un error", "Error", JOptionPane.ERROR_MESSAGE);
+                	        }
+                	        return null;
+                	    }
 
-                    // Añadir la regla a la tabla de FirewallGUI
-                    gui.addRuleToTable(rule);
+                	    @Override
+                	    protected void done() {
+                	        loadingDialog.setVisible(false);
+            	            JOptionPane.showMessageDialog(FirewallHistory.this, "Regla recuperada amb éxit", "Éxit", JOptionPane.INFORMATION_MESSAGE);
 
-                    // Modificar la tabla para que cambie la fecha de fin de la regla a "Regla
-                    // activa"
-                    tableModelHistory.setValueAt("", selectedIndex, 11);
-
-                    JOptionPane.showMessageDialog(this, "Regla recuperada amb éxit", "Éxit",
-                            JOptionPane.INFORMATION_MESSAGE);
+                	    }
+                	};
+                	worker.execute();
                 }
 
             }
