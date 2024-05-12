@@ -1,4 +1,4 @@
-# Gestor Ports per a Windows
+# Gestor de Ports per a Windows
 
 ![Versió](https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000)
 
