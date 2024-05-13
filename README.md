@@ -24,3 +24,5 @@ Aquest projecte ha estat desenvolupat per:
 * [Javier Bernabeu](https://github.com/Jovaoo) 
 * [Arnau Mestre](https://github.com/arnaumv) 
 
+## Fecha de entrega
+>13/05/2024 
