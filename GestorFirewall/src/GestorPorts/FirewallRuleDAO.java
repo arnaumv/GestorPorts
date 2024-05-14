@@ -8,7 +8,6 @@ public class FirewallRuleDAO {
     // Instancia singleton de la clase DAO
     private static FirewallRuleDAO instance;
     // Conexión a la base de datos
-
     private Connection connection;
 
     // Constructor privado para el patrón singleton, establece la conexión a la base
@@ -175,6 +174,7 @@ public class FirewallRuleDAO {
             statement.setString(6, rule.getGroup());
             statement.setString(7, rule.getIpAddress());
             statement.setString(8, rule.getAction());
+            statement.setString(9, rule.getNetworkInterface());
             statement.setString(10, rule.getDirection());
             statement.setString(11, originalName);
 
